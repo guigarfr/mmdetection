@@ -1,0 +1,44 @@
+{
+    "dataRootName": "data",
+    "data": {
+        "sessionId": "795MNOQx",
+        "status": 200,
+        "processTime": {
+            "time": 73.71,
+            "unit": "seconds"
+        },
+        "detections": [
+            {
+                "id": 13228,
+                "name": "BMW M Power",
+                "iconUrl": "https://s3-eu-west-1.amazonaws.com/s3.logograb.com/logograb/cache-dir-public/ab68663dfad1be54a4e6b0bfc37b7fe02bfa5d66.png",
+                "size": "small",
+                "area": 5921.34,
+                "areaPercentage": 0.0177,
+                "validationFlags": [
+                    0.01
+                ],
+                "confidenceALE": null,
+                "coordinates": [
+                    -3.85,
+                    89.67,
+                    192.78,
+                    55.87,
+                    198.7,
+                    86.71,
+                    -2.61,
+                    117.19
+                ],
+                "meta":{
+                    "brand_name": "BMW MMMM POWERR"
+                }
+            }
+        ]
+    },
+    "method": "GET",
+    "requestURI": "/detect/795MNOQx/response",
+    "processTime": {
+        "unit": "milliseconds",
+        "time": 18
+    }
+}

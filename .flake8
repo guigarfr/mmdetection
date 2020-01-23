@@ -1,0 +1,38 @@
+[flake8]
+application-import-names = rplogo
+count = 1
+enable-extensions=G
+exclude =
+	.idea,
+	.tox,
+	.git,
+	.cache,
+	.eggs,
+	__pycache__,
+	eggs,
+	bin,
+	build,
+	develop-eggs,
+	dist,
+	docs,
+	parts,
+	bak
+ignore =
+    D102,
+    D107,
+	F405,
+	H306,
+	D105,  # docstring in magic methods
+	RST304,  # https://github.com/peterjc/flake8-rst-docstrings/issues/7
+	W504,
+	W503
+max-line-length = 80
+per-file-ignores =
+  # There is no doctring violation in test subfolders.
+  /**/tests/**: D100, D101, D104
+
+  # There is no doctring violation in __init__ files.
+  /**/__init__.py: D104
+
+  # Docstrings in scripts
+  scripts/*.py: D100, D103
