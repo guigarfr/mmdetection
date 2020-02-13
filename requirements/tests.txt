@@ -1,0 +1,7 @@
+imageio
+pytest==5.3.2
+pytest-cov
+pytest-flakes
+pytest-pep8
+pytest-runner
+responses

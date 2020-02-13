@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  library:
+    image: rploglib
+    working_dir: /data
+    build:
+      context: .
+      args:
+        - bamboo_jira_version=${bamboo_jira_version}
+        - bamboo_buildTimeStamp=${bamboo_buildTimeStamp}
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - .:/data/
+    command:
+      ./run_tests.py --junitxml junit.xml
