@@ -2,6 +2,8 @@
 import json
 import os
 import unittest
+from http.client import ResponseNotReady
+from unittest import mock
 
 import requests
 from requests.exceptions import HTTPError
@@ -9,6 +11,23 @@ from requests.exceptions import HTTPError
 from schema import SchemaError
 
 import rplogo
+
+
+def mocked_requests_get(*args, **kwargs):
+    """Mock response request."""
+    class MockResponse:
+        def __init__(self, json_data, status_code):
+            self.json_data = json_data
+            self.status_code = status_code
+
+        def json(self):
+            return self.json_data
+
+        @staticmethod
+        def raise_for_status():
+            pass
+
+    return MockResponse(None, 202)
 
 
 class LogoGrabBase(
@@ -174,3 +193,10 @@ class GetResultTests(LogoGrabBase, unittest.TestCase):
         self.assertIn('requestHash', res)
         self.assertIn('status', res)
         self.assertEqual(res.get('status'), 202)
+
+    @mock.patch('requests.Session.get', side_effect=mocked_requests_get)
+    def test_get_result_notready(self, m_get):
+        with self.assertRaises(ResponseNotReady):
+            self.lg.get_result(
+                'valid_hash'
+            )

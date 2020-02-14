@@ -1,5 +1,7 @@
 """LogoGrab implementation for text extractor."""
 import logging
+from http import HTTPStatus
+from http.client import ResponseNotReady
 
 from rplogo import extractor
 from rplogo import rpbbox
@@ -91,6 +93,8 @@ class LogoGrabLogoExtractor(extractor.AbstractLogoExtractor):
         response = self.session.get(
             url=f"{self.endpoint}/{request_hash}/response")
         response.raise_for_status()
+        if response.status_code == HTTPStatus.ACCEPTED.value:
+            raise ResponseNotReady
         return self._parse_response(response.json())
 
     def extract(self, image_url):
