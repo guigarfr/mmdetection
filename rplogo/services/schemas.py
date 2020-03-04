@@ -29,7 +29,7 @@ RESPONSE_DATA_SCHEMA = schema.Schema({
         schema.Schema({
             'validationFlags': list,
             'coordinates': schema.Schema(
-                [float]
+                [schema.Or(int, float)]
             ),
             'name': str,
             'iconUrl': str,
