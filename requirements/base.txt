@@ -2,4 +2,4 @@ numpy
 opencv-python
 pillow
 requests
-schema==0.7.1
+schema
