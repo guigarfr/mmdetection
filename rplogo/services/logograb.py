@@ -61,12 +61,10 @@ class LogoGrabLogoExtractor(extractor.AbstractLogoExtractor):
             except KeyError:
                 logo_name = r['name']
 
-            confidence = r.get('confidence')
-
             results.append(
                 extractor.ExtractionResult(
                     logo_name=logo_name,
-                    confidence=confidence,
+                    confidence=r.get('confidence'),
                     logo=r.get('iconUrl'),
                     box=rpbbox.BBox2D(r.get('coordinates')),
                     session_id=session_id
