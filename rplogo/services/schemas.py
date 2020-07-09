@@ -27,14 +27,13 @@ RESPONSE_SCHEMA = schema.Schema({
 RESPONSE_DATA_SCHEMA = schema.Schema({
     'detections': [
         schema.Schema({
-            'validationFlags': list,
             'coordinates': schema.Schema(
                 [schema.Or(int, float)]
             ),
             'name': str,
             'iconUrl': str,
             'id': int,
-            schema.Optional('confidenceALE'): schema.Or(int, float, None),
+            'confidence': schema.Or(int, float, None),
             schema.Optional('meta'): schema.Schema({
                 schema.Optional('brand_name'): str
             }, ignore_extra_keys=True)

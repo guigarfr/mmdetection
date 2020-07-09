@@ -15,10 +15,7 @@
                 "size": "small",
                 "area": 5921.34,
                 "areaPercentage": 0.0177,
-                "validationFlags": [
-                    0.01
-                ],
-                "confidenceALE": null,
+                "confidence": 0.01,
                 "coordinates": [
                     -3.85,
                     89.67,
