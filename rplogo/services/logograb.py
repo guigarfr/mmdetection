@@ -61,9 +61,7 @@ class LogoGrabLogoExtractor(extractor.AbstractLogoExtractor):
             except KeyError:
                 logo_name = r['name']
 
-            confidence = r.get('confidenceALE')
-            if not confidence:
-                confidence = r['validationFlags'][0]
+            confidence = r.get('confidence')
 
             results.append(
                 extractor.ExtractionResult(
