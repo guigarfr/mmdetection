@@ -14,7 +14,7 @@ LOGGER = logging.getLogger(__name__)
 class LogoGrabLogoExtractor(extractor.AbstractLogoExtractor):
     """Extract text from image using LogoGrab service."""
 
-    ENDPOINT = "https://api.logograb.com/detect"
+    ENDPOINT = "https://api.visua.com/detect"
 
     def __init__(self, developer_key, **kwargs):
         self.developer_key = developer_key
