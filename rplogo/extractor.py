@@ -16,25 +16,27 @@ class AbstractLogoExtractor(ABC):
 class ExtractionResult(object):
     """Defines a result from a text extraction."""
 
-    def __init__(
-        self, logo_name='', confidence=0.0,
-        logo='', box=None, session_id=''
-    ):
+    def __init__(self,
+                 logo_name='',
+                 confidence=0.0,
+                 logo='',
+                 box=None,
+                 session_id=''):
 
-        self._logo_name = logo_name
+        if box is not None and not isinstance(box, rpbbox.BBox2D):
+            raise TypeError("Bounding box should be a `BBox2D`")
+
         if 0.0 <= confidence <= 1.0:
             self._confidence = confidence
         else:
             raise ValueError(
                 'confidence must be between 0 and 1.'
             )
+
+        self._logo_name = logo_name
         self._box = box
         self._logo = logo
         self._id = session_id
-
-        if self._box is not None:
-            if not isinstance(self._box, rpbbox.BBox2D):
-                raise TypeError("Bounding box should be a `BBox2D`")
 
     def __eq__(self, other):
         if isinstance(other, ExtractionResult):
