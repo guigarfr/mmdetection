@@ -32,14 +32,14 @@ class BBox2DTests(unittest.TestCase):
         )
 
     def assertIsExpectedBox(self, box):
-        self.assertEqual(self.expected_x0, box.x0)
-        self.assertEqual(self.expected_y0, box.y0)
-        self.assertEqual(self.expected_x1, box.x1)
-        self.assertEqual(self.expected_y1, box.y1)
-        self.assertEqual(self.expected_x2, box.x2)
-        self.assertEqual(self.expected_y2, box.y2)
-        self.assertEqual(self.expected_x3, box.x3)
-        self.assertEqual(self.expected_y3, box.y3)
+        self.assertEqual(self.expected_x0, box.x_0)
+        self.assertEqual(self.expected_y0, box.y_0)
+        self.assertEqual(self.expected_x1, box.x_1)
+        self.assertEqual(self.expected_y1, box.y_1)
+        self.assertEqual(self.expected_x2, box.x_2)
+        self.assertEqual(self.expected_y2, box.y_2)
+        self.assertEqual(self.expected_x3, box.x_3)
+        self.assertEqual(self.expected_y3, box.y_3)
 
     def test_init__bbox(self):
         box1 = rpbbox.BBox2D(self.xy_values)

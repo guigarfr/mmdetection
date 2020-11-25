@@ -67,10 +67,10 @@ class ExtractionResultTests(unittest.TestCase):
             logo_name="hi Guille",
             box=rpbbox.BBox2D(box)
         )
-        self.assertEqual(res.box.x0, 0.0)
-        self.assertEqual(res.box.y1, 1.0)
-        self.assertEqual(res.box.x2, 2.0)
-        self.assertEqual(res.box.y3, 3.0)
+        self.assertEqual(res.box.x_0, 0.0)
+        self.assertEqual(res.box.y_1, 1.0)
+        self.assertEqual(res.box.x_2, 2.0)
+        self.assertEqual(res.box.y_3, 3.0)
 
     def test_str__without_box(self):
         res = extractor.ExtractionResult(
