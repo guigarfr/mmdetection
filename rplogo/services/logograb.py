@@ -14,12 +14,12 @@ LOGGER = logging.getLogger(__name__)
 class LogoGrabLogoExtractor(extractor.AbstractLogoExtractor):
     """Extract text from image using LogoGrab service."""
 
-    ENDPOINT = "https://api.visua.com/detect"
+    DEFAULT_ENDPOINT = "https://api.visua.com/detect"
 
     def __init__(self, developer_key, **kwargs):
         self.developer_key = developer_key
         self.session = self.create_session(developer_key, **kwargs)
-        self.endpoint = kwargs.get('endpoint', self.ENDPOINT)
+        self.endpoint = kwargs.get('endpoint', self.DEFAULT_ENDPOINT)
 
     @staticmethod
     def create_session(

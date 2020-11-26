@@ -52,14 +52,14 @@ class BBox2D(object):
 
     def __getstate__(self):
         return dict(
-            x0=self.x0,
-            y0=self.y0,
-            x1=self.x1,
-            y1=self.y1,
-            x2=self.x2,
-            y2=self.y2,
-            x3=self.x3,
-            y3=self.y3,
+            x0=self.x_0,
+            y0=self.y_0,
+            x1=self.x_1,
+            y1=self.y_1,
+            x2=self.x_2,
+            y2=self.y_2,
+            x3=self.x_3,
+            y3=self.y_3,
         )
 
     def __setstate__(self, state):
@@ -73,14 +73,14 @@ class BBox2D(object):
         if not isinstance(x, BBox2D):
             return False
         return all([
-            self.x0 == x.x0,
-            self.y0 == x.y0,
-            self.x1 == x.x1,
-            self.y1 == x.y1,
-            self.x2 == x.x2,
-            self.y2 == x.y2,
-            self.x3 == x.x3,
-            self.y3 == x.y3,
+            self.x_0 == x.x_0,
+            self.y_0 == x.y_0,
+            self.x_1 == x.x_1,
+            self.y_1 == x.y_1,
+            self.x_2 == x.x_2,
+            self.y_2 == x.y_2,
+            self.x_3 == x.x_3,
+            self.y_3 == x.y_3,
         ])
 
     def to_list(self):
@@ -93,8 +93,8 @@ class BBox2D(object):
         :return: Bounding box as a `list` of 4 numbers.
         """
         return [
-            self.x0, self.y0, self.x1, self.y1,
-            self.x2, self.y2, self.x3, self.y3
+            self.x_0, self.y_0, self.x_1, self.y_1,
+            self.x_2, self.y_2, self.x_3, self.y_3
         ]
 
     def copy(self):
@@ -114,61 +114,61 @@ class BBox2D(object):
 
     def __str__(self):
         string = (
-            f"BBox2D([{self.x0}, {self.y0}, "
-            f"{self.x1}, {self.y1}, {self.x2}, {self.y2}, "
-            f"{self.x3}, {self.y3}])"
+            f"BBox2D([{self.x_0}, {self.y_0}, "
+            f"{self.x_1}, {self.y_1}, {self.x_2}, {self.y_2}, "
+            f"{self.x_3}, {self.y_3}])"
         )
         return string
 
     def to_obj(self):
         obj = [
             {
-                'x': self.x0,
-                'y': self.y0
+                'x': self.x_0,
+                'y': self.y_0
             },
             {
-                'x': self.x1,
-                'y': self.y1
+                'x': self.x_1,
+                'y': self.y_1
             },
             {
-                'x': self.x2,
-                'y': self.y2
+                'x': self.x_2,
+                'y': self.y_2
             },
             {
-                'x': self.x3,
-                'y': self.y3
+                'x': self.x_3,
+                'y': self.y_3
             }
         ]
         return obj
 
     @property
-    def x0(self):
+    def x_0(self):
         return self._x0
 
     @property
-    def y0(self):
+    def y_0(self):
         return self._y0
 
     @property
-    def x1(self):
+    def x_1(self):
         return self._x1
 
     @property
-    def y1(self):
+    def y_1(self):
         return self._y1
 
     @property
-    def x2(self):
+    def x_2(self):
         return self._x2
 
     @property
-    def y2(self):
+    def y_2(self):
         return self._y2
 
     @property
-    def x3(self):
+    def x_3(self):
         return self._x3
 
     @property
-    def y3(self):
+    def y_3(self):
         return self._y3
