@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import collections
 import random
 import warnings
 
@@ -14,6 +15,27 @@ from mmdet.core import DistEvalHook, EvalHook
 from mmdet.datasets import (build_dataloader, build_dataset,
                             replace_ImageToTensor)
 from mmdet.utils import get_root_logger
+
+
+def _get_dataset_base_cfg(cfg):
+    if isinstance(cfg, collections.Sequence):
+        base = cfg[0]
+    else:
+        if hasattr(cfg, 'datasets'):
+            base = cfg['datasets'][0]
+        else:
+            base = cfg
+    return base
+
+
+def set_imageset_property(cfg, property, value):
+    base = _get_dataset_base_cfg(cfg)
+    base[property] = value
+
+
+def get_imageset_property(cfg, property, pop=False, default=None):
+    base = _get_dataset_base_cfg(cfg)
+    return base.pop(property, default) if pop else base[property]
 
 
 def set_random_seed(seed, deterministic=False):
@@ -133,11 +155,16 @@ def train_detector(model,
     # register eval hooks
     if validate:
         # Support batch_size > 1 in validation
-        val_samples_per_gpu = cfg.data.val.pop('samples_per_gpu', 1)
+        val_samples_per_gpu = get_imageset_property(
+            cfg.data.val, 'samples_per_gpu', pop=True, default=1)
         if val_samples_per_gpu > 1:
             # Replace 'ImageToTensor' to 'DefaultFormatBundle'
-            cfg.data.val.pipeline = replace_ImageToTensor(
-                cfg.data.val.pipeline)
+            set_imageset_property(
+                cfg.data.val,
+                'pipeline',
+                replace_ImageToTensor(
+                    get_imageset_property(cfg.data.val, 'pipeline')),
+            )
         val_dataset = build_dataset(cfg.data.val, dict(test_mode=True))
         val_dataloader = build_dataloader(
             val_dataset,
