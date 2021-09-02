@@ -170,15 +170,6 @@ data = dict(
             pipeline=test_pipeline,
             force_one_class=True,
         ),
-        dict(
-            type='XMLDataset',
-            data_root=data_root + 'openbrand_reduced',
-            ann_file='ImageSets/Main/train.txt',
-            img_prefix='',
-            classes=logos_ds_classes,
-            pipeline=test_pipeline,
-            force_one_class=True,
-        ),
     ]
 )
 
