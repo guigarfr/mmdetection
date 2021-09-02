@@ -22,11 +22,17 @@ class XMLDataset(CustomDataset):
         ann_subdir (str): Subdir where annotations are. Default: Annotations.
     """
 
+    default_class_name = 'Object'
+
     def __init__(self,
                  min_size=None,
                  img_subdir='JPEGImages',
                  ann_subdir='Annotations',
+                 force_one_class=False,
                  **kwargs):
+        self.force_one_class = force_one_class
+        if force_one_class:
+            kwargs['classes'] = [self.default_class_name]
         assert self.CLASSES or kwargs.get(
             'classes', None), 'CLASSES in `XMLDataset` can not be None.'
         self.img_subdir = img_subdir
@@ -80,6 +86,8 @@ class XMLDataset(CustomDataset):
                 root = tree.getroot()
                 for obj in root.findall('object'):
                     name = obj.find('name').text
+                    if self.force_one_class:
+                        name = self.default_class_name
                     if name in self.CLASSES:
                         valid_inds.append(i)
                         break
@@ -107,6 +115,8 @@ class XMLDataset(CustomDataset):
         labels_ignore = []
         for obj in root.findall('object'):
             name = obj.find('name').text
+            if self.force_one_class:
+                name = self.default_class_name
             if name not in self.CLASSES:
                 continue
             label = self.cat2label[name]

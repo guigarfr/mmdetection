@@ -314,7 +314,7 @@ class CustomDataset(Dataset):
         elif metric == 'recall':
             gt_bboxes = [ann['bboxes'] for ann in annotations]
             recalls = eval_recalls(
-                gt_bboxes, results, proposal_nums, iou_thr, logger=logger)
+                gt_bboxes, [x[0] for x in results], proposal_nums, iou_thr, logger=logger)
             for i, num in enumerate(proposal_nums):
                 for j, iou in enumerate(iou_thrs):
                     eval_results[f'recall@{num}@{iou}'] = recalls[i, j]
