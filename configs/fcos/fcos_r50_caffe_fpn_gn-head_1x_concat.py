@@ -151,6 +151,27 @@ data = dict(
     test=[
         dict(
             type='XMLDataset',
+            classes=logodet_classes,
+            data_root=data_root + 'LogoDet-3K',
+            ann_file='test.txt',
+            min_size=0.5,
+            ann_subdir='',
+            img_prefix='',
+            img_subdir='',
+            pipeline=test_pipeline,
+            force_one_class=True,
+        ),
+        dict(
+            type='XMLDataset',
+            data_root=data_root + 'logo_dataset',
+            ann_file='ImageSets/Main/test.txt',
+            img_prefix='',
+            classes=logos_ds_classes,
+            pipeline=test_pipeline,
+            force_one_class=True,
+        ),
+        dict(
+            type='XMLDataset',
             data_root=data_root + 'openbrand_reduced',
             ann_file='ImageSets/Main/train.txt',
             img_prefix='',
