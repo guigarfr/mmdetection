@@ -1,4 +1,4 @@
-dataset_type = 'XMLDataset'
+dataset_type = 'LogosDataset'
 data_root = '../data/'
 
 img_norm_cfg = dict(

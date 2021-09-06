@@ -1,5 +1,5 @@
 dataset_type = 'LogosDataset'
-data_root = '/home/ubuntu/data/logo_dataset/'
+data_root = '../data/logo_dataset/'
 
 
 img_norm_cfg = dict(
@@ -32,8 +32,8 @@ test_pipeline = [
 ]
 
 data = dict(
-    samples_per_gpu=1,
-    workers_per_gpu=4,
+    samples_per_gpu=4,
+    workers_per_gpu=1,
     train=dict(
         type=dataset_type,
         data_root=data_root,
@@ -56,4 +56,4 @@ data = dict(
         pipeline=test_pipeline,
     ),
 )
-evaluation = dict(interval=1, metric='mAP')
+# evaluation = dict(interval=1, metric='bbox')

@@ -1,6 +1,6 @@
 _base_ = [
     '../_base_/datasets/logos_dataset_detection.py',
-    'fcos_r50_caffe_fpn_gn-head_1x_base.py'
+    '../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py'
 ]
 
 fp16 = dict(loss_scale=512.)
