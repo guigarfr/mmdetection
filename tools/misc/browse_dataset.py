@@ -67,6 +67,12 @@ def retrieve_data_cfg(config_path, skip_type, cfg_options):
 
     if isinstance(train_data_cfg, Sequence):
         [skip_pipeline_steps(c) for c in train_data_cfg]
+    elif all((
+         isinstance(train_data_cfg, dict),
+         hasattr(train_data_cfg, 'datasets'),
+         isinstance(train_data_cfg.datasets, list),
+    )):
+        [skip_pipeline_steps(c) for c in train_data_cfg['datasets']]
     else:
         skip_pipeline_steps(train_data_cfg)
 
