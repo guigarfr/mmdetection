@@ -1,4 +1,4 @@
-dataset_type = 'OpenBrandDataset'
+dataset_type = 'LogosDataset'
 data_root = '../data/openbrand_dataset/'
 
 
