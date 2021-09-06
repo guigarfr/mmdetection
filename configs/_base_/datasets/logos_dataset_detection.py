@@ -78,6 +78,7 @@ data = dict(
         ann_file='ImageSets/Main/train.txt',
         img_prefix='',
         pipeline=train_pipeline,
+        force_one_class=True
     ),
     val=dict(
         type=dataset_type,
@@ -85,6 +86,7 @@ data = dict(
         data_root=data_root,
         ann_file='ImageSets/Main/validation.txt',
         img_prefix='',
+        force_one_class=True,
         pipeline=test_pipeline,
     ),
     test=dict(
@@ -94,6 +96,7 @@ data = dict(
         ann_file='ImageSets/Main/test.txt',
         img_prefix='',
         pipeline=test_pipeline,
+        force_one_class=True
     ),
 )
 # evaluation = dict(interval=1, metric='bbox')
