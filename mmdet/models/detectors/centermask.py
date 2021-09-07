@@ -48,7 +48,8 @@ class CenterMask(SingleStageDetector):
         cls_score, bbox_pred, centerness = self.bbox_head(x)
 
         # Compute bbox, class and centerness loss (FCOSHead loss)
-        bbox_head_loss_inputs = (cls_score, bbox_pred) + (gt_bboxes, gt_labels,
+        bbox_head_loss_inputs = (cls_score, bbox_pred, centerness) + (gt_bboxes,
+                                                            gt_labels,
                                                           img_metas)
         losses, sampling_results = self.bbox_head.loss(
             *bbox_head_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
