@@ -1,10 +1,11 @@
 from mmdet.models.builder import build_loss
-# from mmdet.models.builder import HEADS
+from mmdet.models.builder import HEADS
 from mmcv.cnn import Linear, ConvModule
 from mmcv.runner import force_fp32
+import torch
 
 
-#@HEADS.register_module()
+@HEADS.register_module()
 class OpenBrandFeatureRepresentation(object):
 
     def __init__(
