@@ -5,7 +5,7 @@ from mmdet.models.builder import HEADS, build_head, build_roi_extractor
 from mmdet.models.roi_heads.standard_roi_head import StandardRoIHead
 
 
-# @HEADS.register_module()
+@HEADS.register_module()
 class CenterMaskRoIHead(StandardRoIHead):
     """Simplest base roi head including one bbox head and one mask head."""
 
