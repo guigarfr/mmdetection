@@ -3,6 +3,7 @@ from .atss import ATSS
 from .autoassign import AutoAssign
 from .base import BaseDetector
 from .cascade_rcnn import CascadeRCNN
+from .centermask import CenterMask
 from .centernet import CenterNet
 from .cornernet import CornerNet
 from .deformable_detr import DeformableDETR
@@ -45,5 +46,5 @@ __all__ = [
     'NASFCOS', 'PointRend', 'GFL', 'CornerNet', 'PAA', 'YOLOV3', 'YOLACT',
     'VFNet', 'DETR', 'TridentFasterRCNN', 'SparseRCNN', 'SCNet',
     'DeformableDETR', 'AutoAssign', 'YOLOF', 'CenterNet', 'YOLOX',
-    'TwoStagePanopticSegmentor', 'PanopticFPN'
+    'TwoStagePanopticSegmentor', 'PanopticFPN', 'CenterMask'
 ]

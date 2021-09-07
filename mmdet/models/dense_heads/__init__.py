@@ -19,6 +19,7 @@ from .ga_rpn_head import GARPNHead
 from .gfl_head import GFLHead
 from .guided_anchor_head import FeatureAdaption, GuidedAnchorHead
 from .ld_head import LDHead
+from .openbrand_feature_representation import OpenBrandFeatureRepresentation
 from .nasfcos_head import NASFCOSHead
 from .paa_head import PAAHead
 from .pisa_retinanet_head import PISARetinaHead
@@ -29,6 +30,7 @@ from .retina_sepbn_head import RetinaSepBNHead
 from .rpn_head import RPNHead
 from .sabl_retina_head import SABLRetinaHead
 from .ssd_head import SSDHead
+from .spatial_attention_mask_head import SpatialAttentionMaskHead
 from .vfnet_head import VFNetHead
 from .yolact_head import YOLACTHead, YOLACTProtonet, YOLACTSegmHead
 from .yolo_head import YOLOV3Head
@@ -45,5 +47,6 @@ __all__ = [
     'SABLRetinaHead', 'CentripetalHead', 'VFNetHead', 'StageCascadeRPNHead',
     'CascadeRPNHead', 'EmbeddingRPNHead', 'LDHead', 'CascadeRPNHead',
     'AutoAssignHead', 'DETRHead', 'YOLOFHead', 'DeformableDETRHead',
-    'CenterNetHead', 'YOLOXHead'
+    'CenterNetHead', 'YOLOXHead', 'SpatialAttentionMaskHead',
+    'OpenBrandFeatureRepresentation'
 ]

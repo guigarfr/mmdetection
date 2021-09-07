@@ -15,7 +15,6 @@ class SpatialAttention(nn.Module):
 
         self.conv = ConvModule(2, 1, kernel_size, padding=padding, bias=False)
 
-        self._init_weights()
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
