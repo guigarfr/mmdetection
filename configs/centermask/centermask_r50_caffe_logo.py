@@ -53,13 +53,13 @@ model = dict(
             out_channels=512,
             featmap_strides=[8, 16, 32, 64, 128]),
         mask_head=dict(
-            type='SpatialAttentionModule',
+            type='SpatialAttentionMaskHead',
             num_convs=4,
             in_channels=512,
-            conv_out_channels=512,
+            out_channels=512,
             num_classes=1,
-            loss_mask=dict(
-                type='CrossEntropyLoss', use_mask=False, loss_weight=1.0))
+            # loss=dict(type='CrossEntropyLoss', use_mask=False, loss_weight=1.0)
+        )
     ),
     feature_head=dict(
         type="OpenBrandFeatureRepresentation",
@@ -94,7 +94,7 @@ model = dict(
             max_per_img=100,
             mask_thr_binary=0.5)
     ),
-    with_mask=False,
+    # with_mask=False,
 )
 img_norm_cfg = dict(
     mean=[102.9801, 115.9465, 122.7717], std=[1.0, 1.0, 1.0], to_rgb=False)
