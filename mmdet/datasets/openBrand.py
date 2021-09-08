@@ -18,14 +18,8 @@ from .custom import CustomDataset
 @DATASETS.register_module()
 class OpenBrandDataset(CustomDataset):
 
-    default_class_name = 'Object'
-
-    def __init__(self, *args, force_one_class=False, **kwargs):
-        self.force_one_class = force_one_class
-        if self.force_one_class:
-            kwargs["classes"] = [self.default_class_name]
-        else:
-            kwargs.setdefault("classes", "sample_test/labelList.txt")
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("classes", "sample_test/labelList.txt")
         super().__init__(*args, **kwargs)
 
     def load_annotations(self, ann_file):
@@ -39,28 +33,45 @@ class OpenBrandDataset(CustomDataset):
         """
 
         self.coco = COCO(ann_file)
-        if self.force_one_class:
-            self.cat_ids = [0]
-        else:
-            self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
+        self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
         self.img_ids = self.coco.get_img_ids()
         data_infos = []
         for i in self.img_ids:
             info = self.coco.load_imgs([i])[0]
             info['filename'] = info['file_name']
-
-            ann_ids = self.coco.get_ann_ids(img_ids=[i])
-            ann_info = self.coco.load_anns(ann_ids)
-            info['ann'] = self._parse_ann_info(info, ann_info)
-            info['ann']['labels'] = np.array([
-                int(ann['category_id']) if not self.force_one_class else 0
-                for ann in ann_info
-            ])
-
             data_infos.append(info)
-
         return data_infos
+
+    def get_ann_info(self, idx):
+        """Get COCO annotation by index.
+
+        Args:
+            idx (int): Index of data.
+
+        Returns:
+            dict: Annotation info of specified index.
+        """
+
+        img_id = self.data_infos[idx]['id']
+        ann_ids = self.coco.get_ann_ids(img_ids=[img_id])
+        ann_info = self.coco.load_anns(ann_ids)
+        return self._parse_ann_info(self.data_infos[idx], ann_info)
+
+    def get_cat_ids(self, idx):
+        """Get COCO category ids by index.
+
+        Args:
+            idx (int): Index of data.
+
+        Returns:
+            list[int]: All categories in the image of specified index.
+        """
+
+        img_id = self.data_infos[idx]['id']
+        ann_ids = self.coco.get_ann_ids(img_ids=[img_id])
+        ann_info = self.coco.load_anns(ann_ids)
+        return [ann['category_id'] for ann in ann_info]
 
     def _filter_imgs(self, min_size=32):
         """Filter images too small or without ground truths."""
@@ -124,16 +135,14 @@ class OpenBrandDataset(CustomDataset):
                 continue
             if ann['area'] <= 0 or w < 1 or h < 1:
                 continue
-            if (not self.force_one_class) and ann[
-                    'category_id'] not in self.cat_ids:
+            if ann['category_id'] not in self.cat_ids:
                 continue
             bbox = [x1, y1, x1 + w, y1 + h]
             if ann.get('iscrowd', False):
                 gt_bboxes_ignore.append(bbox)
             else:
                 gt_bboxes.append(bbox)
-                cat_id = 0 if self.force_one_class else ann['category_id']
-                gt_labels.append(self.cat2label[cat_id])
+                gt_labels.append(self.cat2label[ann['category_id']])
                 gt_masks_ann.append(ann['segmentation'])
 
         if gt_bboxes:
@@ -340,3 +349,143 @@ class OpenBrandDataset(CustomDataset):
             tmp_dir = None
         result_files = self.results2json(results, jsonfile_prefix)
         return result_files, tmp_dir
+
+    def evaluate(self,
+                 results,
+                 metric='bbox',
+                 logger=None,
+                 jsonfile_prefix=None,
+                 classwise=False,
+                 proposal_nums=(100, 300, 1000),
+                 iou_thrs=np.arange(0.5, 0.96, 0.05)):
+        """Evaluation in COCO protocol.
+
+        Args:
+            results (list[list | tuple]): Testing results of the dataset.
+            metric (str | list[str]): Metrics to be evaluated. Options are
+                'bbox', 'segm', 'proposal', 'proposal_fast'.
+            logger (logging.Logger | str | None): Logger used for printing
+                related information during evaluation. Default: None.
+            jsonfile_prefix (str | None): The prefix of json files. It includes
+                the file path and the prefix of filename, e.g., "a/b/prefix".
+                If not specified, a temp file will be created. Default: None.
+            classwise (bool): Whether to evaluating the AP for each class.
+            proposal_nums (Sequence[int]): Proposal number used for evaluating
+                recalls, such as recall@100, recall@1000.
+                Default: (100, 300, 1000).
+            iou_thrs (Sequence[float]): IoU threshold used for evaluating
+                recalls/mAPs. If set to a list, the average of all IoUs will
+                also be computed. Default: np.arange(0.5, 0.96, 0.05).
+
+        Returns:
+            dict[str, float]: COCO style evaluation metric.
+        """
+
+        metrics = metric if isinstance(metric, list) else [metric]
+        allowed_metrics = ['bbox', 'segm', 'proposal', 'proposal_fast', 'mAP']
+        for metric in metrics:
+            if metric not in allowed_metrics:
+                raise KeyError(f'metric {metric} is not supported')
+
+        result_files, tmp_dir = self.format_results(results, jsonfile_prefix)
+
+        eval_results = {}
+        cocoGt = self.coco
+        for metric in metrics:
+            msg = f'Evaluating {metric}...'
+            if logger is None:
+                msg = '\n' + msg
+            print_log(msg, logger=logger)
+
+            if metric == 'proposal_fast':
+                ar = self.fast_eval_recall(
+                    results, proposal_nums, iou_thrs, logger='silent')
+                log_msg = []
+                for i, num in enumerate(proposal_nums):
+                    eval_results[f'AR@{num}'] = ar[i]
+                    log_msg.append(f'\nAR@{num}\t{ar[i]:.4f}')
+                log_msg = ''.join(log_msg)
+                print_log(log_msg, logger=logger)
+                continue
+
+            if metric not in result_files:
+                raise KeyError(f'{metric} is not in results')
+            try:
+                cocoDt = cocoGt.loadRes(result_files[metric])
+            except IndexError:
+                print_log(
+                    'The testing results of the whole dataset is empty.',
+                    logger=logger,
+                    level=logging.ERROR)
+                break
+
+            iou_type = 'bbox' if metric == 'proposal' else metric
+            cocoEval = COCOeval(cocoGt, cocoDt, iou_type)
+            cocoEval.params.catIds = self.cat_ids
+            cocoEval.params.imgIds = self.img_ids
+            cocoEval.params.iouThrs = iou_thrs
+            if metric == 'proposal':
+                cocoEval.params.useCats = 0
+                cocoEval.params.maxDets = list(proposal_nums)
+                cocoEval.evaluate()
+                cocoEval.accumulate()
+                cocoEval.summarize()
+                metric_items = [
+                    'AR@100', 'AR@300', 'AR@1000', 'AR_s@1000', 'AR_m@1000',
+                    'AR_l@1000'
+                ]
+                for i, item in enumerate(metric_items):
+                    val = float(f'{cocoEval.stats[i + 6]:.3f}')
+                    eval_results[item] = val
+            else:
+                cocoEval.evaluate()
+                cocoEval.accumulate()
+                cocoEval.summarize()
+                if classwise:  # Compute per-category AP
+                    # Compute per-category AP
+                    # from https://github.com/facebookresearch/detectron2/
+                    precisions = cocoEval.eval['precision']
+                    # precision: (iou, recall, cls, area range, max dets)
+                    assert len(self.cat_ids) == precisions.shape[2]
+
+                    results_per_category = []
+                    for idx, catId in enumerate(self.cat_ids):
+                        # area range index 0: all area ranges
+                        # max dets index -1: typically 100 per image
+                        nm = self.coco.loadCats(catId)[0]
+                        precision = precisions[:, :, idx, 0, -1]
+                        precision = precision[precision > -1]
+                        if precision.size:
+                            ap = np.mean(precision)
+                        else:
+                            ap = float('nan')
+                        results_per_category.append(
+                            (f'{nm["name"]}', f'{float(ap):0.3f}'))
+
+                    num_columns = min(6, len(results_per_category) * 2)
+                    results_flatten = list(
+                        itertools.chain(*results_per_category))
+                    headers = ['category', 'AP'] * (num_columns // 2)
+                    results_2d = itertools.zip_longest(*[
+                        results_flatten[i::num_columns]
+                        for i in range(num_columns)
+                    ])
+                    table_data = [headers]
+                    table_data += [result for result in results_2d]
+                    table = AsciiTable(table_data)
+                    print_log('\n' + table.table, logger=logger)
+
+                metric_items = [
+                    'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l'
+                ]
+                for i in range(len(metric_items)):
+                    key = f'{metric}_{metric_items[i]}'
+                    val = float(f'{cocoEval.stats[i]:.3f}')
+                    eval_results[key] = val
+                ap = cocoEval.stats[:6]
+                eval_results[f'{metric}_mAP_copypaste'] = (
+                    f'{ap[0]:.3f} {ap[1]:.3f} {ap[2]:.3f} {ap[3]:.3f} '
+                    f'{ap[4]:.3f} {ap[5]:.3f}')
+        if tmp_dir is not None:
+            tmp_dir.cleanup()
+        return eval_results
