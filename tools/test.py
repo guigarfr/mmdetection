@@ -19,6 +19,34 @@ from mmdet.datasets import (build_dataloader, build_dataset,
 from mmdet.models import build_detector
 
 
+def replace_pipeline(my_cfg, eval=True, samples_per_gpu=None):
+    if isinstance(my_cfg, dict):
+        if hasattr(my_cfg, 'datasets') and isinstance(my_cfg.datasets, list):
+            samples_per_gpu = replace_pipeline(
+                my_cfg.datasets,
+                eval=eval,
+                samples_per_gpu=samples_per_gpu)
+        else:
+            if not eval:
+                my_cfg.test_mode = True
+            defined_samples_gpu = my_cfg.pop('samples_per_gpu', None)
+            if defined_samples_gpu:
+                if samples_per_gpu is not None:
+                    samples_per_gpu = min(defined_samples_gpu, samples_per_gpu)
+                else:
+                    samples_per_gpu = defined_samples_gpu
+            # Replace 'ImageToTensor' to 'DefaultFormatBundle'
+            my_cfg.pipeline = replace_ImageToTensor(my_cfg.pipeline)
+    else:
+        for c in my_cfg.datasets:
+            samples_per_gpu = replace_pipeline(
+                c,
+                eval=eval,
+                samples_per_gpu=samples_per_gpu)
+
+    return samples_per_gpu
+
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description='MMDet test (and eval) a model')
@@ -142,21 +170,10 @@ def main():
                 cfg.model.neck.rfp_backbone.pretrained = None
 
     # in case the test dataset is concatenated
-    samples_per_gpu = cfg.data.pop('samples_per_gpu', 1)
-    if isinstance(cfg.data.test, dict):
-        if not args.eval:
-            cfg.data.test.test_mode = True
-        samples_per_gpu = cfg.data.test.pop('samples_per_gpu', samples_per_gpu)
-        # Replace 'ImageToTensor' to 'DefaultFormatBundle'
-        cfg.data.test.pipeline = replace_ImageToTensor(
-            cfg.data.test.pipeline)
-    elif isinstance(cfg.data.test, list):
-        for ds_cfg in cfg.data.test:
-            samples_per_gpu = max(
-                samples_per_gpu, ds_cfg.pop('samples_per_gpu', 1))
-            if not args.eval:
-                ds_cfg.test_mode = True
-            ds_cfg.pipeline = replace_ImageToTensor(ds_cfg.pipeline)
+    samples_per_gpu = replace_pipeline(
+        cfg.data,
+        eval=args.eval,
+        samples_per_gpu=cfg.data.pop('samples_per_gpu', None))
 
     # init distributed env first, since logger depends on the dist info.
     if args.launcher == 'none':
