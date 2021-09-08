@@ -1,5 +1,5 @@
 dataset_type = 'XMLDataset'
-data_root = '../data/logo_dataset/'
+data_root = '/home/ubuntu/data/logo_dataset/'
 
 
 img_norm_cfg = dict(
