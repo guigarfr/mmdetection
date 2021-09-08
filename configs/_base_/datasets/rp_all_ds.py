@@ -593,5 +593,6 @@ data = dict(
             img_prefix='',
             img_subdir='',
             pipeline=test_pipeline,
+            force_one_class=True,
         ),
 )
