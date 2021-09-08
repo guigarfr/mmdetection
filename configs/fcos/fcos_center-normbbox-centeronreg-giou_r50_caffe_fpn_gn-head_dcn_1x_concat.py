@@ -1,5 +1,5 @@
 _base_ = [
-    'fcos_r50_caffe_fpn_gn-head_1x_logo.py',
+    'fcos_r50_caffe_fpn_gn-head_1x_base.py',
     '../_base_/datasets/rp_all_ds.py',
 ]
 
