@@ -3,8 +3,6 @@ _base_ = [
     '../_base_/datasets/rp_all_ds.py',
 ]
 
-data_root = '/home/ubuntu/data/'
-
 model = dict(
     backbone=dict(
         dcn=dict(type='DCNv2', deform_groups=1, fallback_on_stride=False),
