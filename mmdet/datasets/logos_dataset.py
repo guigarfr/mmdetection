@@ -1,6 +1,9 @@
+import collections
 import os.path as osp
 
+import numpy as np
 import mmcv
+from mmdet.core import eval_map, eval_recalls
 
 from . import XMLDataset
 from .builder import DATASETS
@@ -9,16 +12,13 @@ import xml.etree.ElementTree as ET
 
 from PIL import Image
 
-import numpy as np
-
-from typing import OrderedDict
-from mmcv.utils import print_log
-from mmdet.core import eval_map, eval_recalls
-
 
 @DATASETS.register_module()
 class LogosDataset(XMLDataset):
-    CLASSES = set('Logo',)
+
+    def __init__(self, *args, **kwargs):
+        self.CLASSES = ["Logo"]
+        super(LogosDataset, self).__init__(*args, **kwargs)
 
     def load_annotations(self, ann_file):
         """Load annotation from XML style ann_file.
@@ -31,7 +31,7 @@ class LogosDataset(XMLDataset):
         """
 
         if not self.CLASSES:
-            self.CLASSES = set(['Logo'])
+            self.CLASSES = set()
 
         data_infos = []
         img_ids = mmcv.list_from_file(ann_file)
@@ -54,33 +54,14 @@ class LogosDataset(XMLDataset):
                 width, height = img.size
 
             # Get object classes
-            self.CLASSES = set(['Logo',])
+            self.CLASSES |= {x.text for x in tree.findall("object/name")}
 
             data_infos.append(
                 dict(id=img_id, filename=filename, width=width, height=height))
 
-        self.CLASSES = ['Logo',]
+        self.CLASSES = sorted(list(self.CLASSES))
 
         return data_infos
-
-    def _filter_imgs(self, min_size=32):
-        """Filter JPEGImages too small or without annotation."""
-        valid_inds = []
-        for i, img_info in enumerate(self.data_infos):
-            if min(img_info['width'], img_info['height']) < min_size:
-                continue
-            if self.filter_empty_gt:
-                img_id = img_info['id']
-                xml_path = osp.join(self.img_prefix, 'Annotations',
-                                    f'{img_id}.xml')
-                tree = ET.parse(xml_path)
-                root = tree.getroot()
-                for obj in root.findall('object'):
-                    valid_inds.append(i)
-                    break
-            else:
-                valid_inds.append(i)
-        return valid_inds
 
     def get_ann_info(self, idx):
         """Get annotation from XML file by index.
@@ -145,27 +126,6 @@ class LogosDataset(XMLDataset):
             labels_ignore=labels_ignore.astype(np.int64))
         return ann
 
-    def get_cat_ids(self, idx):
-        """Get category ids in XML file by index.
-
-        Args:
-            idx (int): Index of data.
-
-        Returns:
-            list[int]: All categories in the image of specified index.
-        """
-
-        cat_ids = []
-        img_id = self.data_infos[idx]['id']
-        xml_path = osp.join(self.img_prefix, 'Annotations', f'{img_id}.xml')
-        tree = ET.parse(xml_path)
-        root = tree.getroot()
-        for obj in root.findall('object'):
-            label = 0
-            cat_ids.append(label)
-
-        return cat_ids
-
     def evaluate(self,
                  results,
                  metric='mAP',
@@ -199,17 +159,27 @@ class LogosDataset(XMLDataset):
         allowed_metrics = ['mAP', 'recall']
         if metric not in allowed_metrics:
             raise KeyError(f'metric {metric} is not supported')
+
+        # This is very crash, ignore it
+        # new_results = list()
+        # for image in results:
+        #     logo_bbs = np.empty((0, 5))
+        #     for i in range(len(self.CLASSES)):
+        #         logo_bbs = np.vstack([logo_bbs, image[i]])
+        #     new_results.append(np.array([logo_bbs]))
+        new_results = results
+
         annotations = [self.get_ann_info(i) for i in range(len(self))]
-        eval_results = OrderedDict()
+        eval_results = collections.OrderedDict()
         iou_thrs = [iou_thr] if isinstance(iou_thr, float) else iou_thr
         if metric == 'mAP':
             assert isinstance(iou_thrs, list)
             ds_name = self.CLASSES
             mean_aps = []
             for iou_thr in iou_thrs:
-                print_log(f'\n{"-" * 15}iou_thr: {iou_thr}{"-" * 15}')
+                print(f'\n{"-" * 15}iou_thr: {iou_thr}{"-" * 15}')
                 mean_ap, _ = eval_map(
-                    results,
+                    new_results,
                     annotations,
                     scale_ranges=None,
                     iou_thr=iou_thr,
@@ -221,7 +191,7 @@ class LogosDataset(XMLDataset):
         elif metric == 'recall':
             gt_bboxes = [ann['bboxes'] for ann in annotations]
             recalls = eval_recalls(
-                gt_bboxes, results, proposal_nums, iou_thrs, logger=logger)
+                gt_bboxes, [x[0] for x in new_results], proposal_nums, iou_thrs, logger=logger)
             for i, num in enumerate(proposal_nums):
                 for j, iou_thr in enumerate(iou_thrs):
                     eval_results[f'recall@{num}@{iou_thr}'] = recalls[i, j]

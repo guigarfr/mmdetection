@@ -564,17 +564,6 @@ data = dict(
     val=[
         dict(
             type='LogosDataset',
-            classes=logodet_classes,
-            data_root=data_root + 'LogoDet-3K',
-            ann_file='validation.txt',
-            min_size=0.5,
-            ann_subdir='',
-            img_prefix='',
-            img_subdir='',
-            pipeline=test_pipeline,
-        ),
-        dict(
-            type='LogosDataset',
             data_root=data_root + 'logos_dataset',
             ann_file='ImageSets/Main/validation.txt',
             img_prefix='',
