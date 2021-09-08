@@ -171,7 +171,7 @@ def main():
 
     # in case the test dataset is concatenated
     samples_per_gpu = replace_pipeline(
-        cfg.data,
+        cfg.data.test,
         eval=args.eval,
         samples_per_gpu=cfg.data.pop('samples_per_gpu', None))
 
