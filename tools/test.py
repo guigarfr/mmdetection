@@ -38,7 +38,7 @@ def replace_pipeline(my_cfg, eval=True, samples_per_gpu=None):
             # Replace 'ImageToTensor' to 'DefaultFormatBundle'
             my_cfg.pipeline = replace_ImageToTensor(my_cfg.pipeline)
     else:
-        for c in my_cfg:
+        for c in my_cfg.datasets:
             samples_per_gpu = replace_pipeline(
                 c,
                 eval=eval,
@@ -171,7 +171,7 @@ def main():
 
     # in case the test dataset is concatenated
     samples_per_gpu = replace_pipeline(
-        cfg.data.test,
+        cfg.data,
         eval=args.eval,
         samples_per_gpu=cfg.data.pop('samples_per_gpu', None))
 
