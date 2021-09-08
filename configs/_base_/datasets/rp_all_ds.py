@@ -40,7 +40,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_1_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_1/',
                 pipeline=train_pipeline,
@@ -48,7 +48,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_2_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_2/',
                 pipeline=train_pipeline,
@@ -56,7 +56,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_3_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_3/',
                 pipeline=train_pipeline,
@@ -64,7 +64,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_4_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_4/',
                 pipeline=train_pipeline,
@@ -72,7 +72,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_5_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_5/',
                 pipeline=train_pipeline,
@@ -80,7 +80,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_6_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_6/',
                 pipeline=train_pipeline,
@@ -88,7 +88,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_7_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_7/',
                 pipeline=train_pipeline,
@@ -96,7 +96,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_8_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_8/',
                 pipeline=train_pipeline,
@@ -104,7 +104,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_9_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_9/',
                 pipeline=train_pipeline,
@@ -112,7 +112,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_10_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_10/',
                 pipeline=train_pipeline,
@@ -120,7 +120,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_11_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_11/',
                 pipeline=train_pipeline,
@@ -128,7 +128,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_12_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_12/',
                 pipeline=train_pipeline,
@@ -136,7 +136,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_13_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_13/',
                 pipeline=train_pipeline,
@@ -144,7 +144,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_14_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_14/',
                 pipeline=train_pipeline,
@@ -152,7 +152,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_15_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_15/',
                 pipeline=train_pipeline,
@@ -160,7 +160,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_16_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_16/',
                 pipeline=train_pipeline,
@@ -168,7 +168,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_17_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_17/',
                 pipeline=train_pipeline,
@@ -176,7 +176,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_18_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_18/',
                 pipeline=train_pipeline,
@@ -184,7 +184,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_19_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_19/',
                 pipeline=train_pipeline,
@@ -192,7 +192,7 @@ train_openbrand = dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/train_20210409_20_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_20/',
                 pipeline=train_pipeline,
@@ -207,7 +207,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_1_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_1/',
                 pipeline=test_pipeline,
@@ -215,7 +215,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_2_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_2/',
                 pipeline=test_pipeline,
@@ -223,7 +223,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_3_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_3/',
                 pipeline=test_pipeline,
@@ -231,7 +231,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_4_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_4/',
                 pipeline=test_pipeline,
@@ -239,7 +239,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_5_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_5/',
                 pipeline=test_pipeline,
@@ -247,7 +247,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_6_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_6/',
                 pipeline=test_pipeline,
@@ -255,7 +255,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_7_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_7/',
                 pipeline=test_pipeline,
@@ -263,7 +263,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_8_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_8/',
                 pipeline=test_pipeline,
@@ -271,7 +271,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_9_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_9/',
                 pipeline=test_pipeline,
@@ -279,7 +279,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_10_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_10/',
                 pipeline=test_pipeline,
@@ -287,7 +287,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_11_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_11/',
                 pipeline=test_pipeline,
@@ -295,7 +295,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_12_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_12/',
                 pipeline=test_pipeline,
@@ -303,7 +303,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_13_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_13/',
                 pipeline=test_pipeline,
@@ -311,7 +311,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_14_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_14/',
                 pipeline=test_pipeline,
@@ -319,7 +319,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_15_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_15/',
                 pipeline=test_pipeline,
@@ -327,7 +327,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_16_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_16/',
                 pipeline=test_pipeline,
@@ -335,7 +335,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_17_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_17/',
                 pipeline=test_pipeline,
@@ -343,7 +343,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_18_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_18/',
                 pipeline=test_pipeline,
@@ -351,7 +351,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_19_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_19/',
                 pipeline=test_pipeline,
@@ -359,7 +359,7 @@ validation_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/validation_20210409_20_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_20/',
                 pipeline=test_pipeline,
@@ -374,7 +374,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_1_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_1/',
                 pipeline=test_pipeline,
@@ -382,7 +382,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_2_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_2/',
                 pipeline=test_pipeline,
@@ -390,7 +390,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_3_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_3/',
                 pipeline=test_pipeline,
@@ -398,7 +398,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_4_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_4/',
                 pipeline=test_pipeline,
@@ -406,7 +406,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_5_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_5/',
                 pipeline=test_pipeline,
@@ -414,7 +414,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_6_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_6/',
                 pipeline=test_pipeline,
@@ -422,7 +422,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_7_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_7/',
                 pipeline=test_pipeline,
@@ -430,7 +430,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_8_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_8/',
                 pipeline=test_pipeline,
@@ -438,7 +438,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_9_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_9/',
                 pipeline=test_pipeline,
@@ -446,7 +446,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_10_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_10/',
                 pipeline=test_pipeline,
@@ -454,7 +454,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_11_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_11/',
                 pipeline=test_pipeline,
@@ -462,7 +462,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_12_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_12/',
                 pipeline=test_pipeline,
@@ -470,7 +470,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_13_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_13/',
                 pipeline=test_pipeline,
@@ -478,7 +478,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_14_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_14/',
                 pipeline=test_pipeline,
@@ -486,7 +486,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_15_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_15/',
                 pipeline=test_pipeline,
@@ -494,7 +494,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_16_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_16/',
                 pipeline=test_pipeline,
@@ -502,7 +502,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_17_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_17/',
                 pipeline=test_pipeline,
@@ -510,7 +510,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_18_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_18/',
                 pipeline=test_pipeline,
@@ -518,7 +518,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_19_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_19/',
                 pipeline=test_pipeline,
@@ -526,7 +526,7 @@ test_openbrand=dict(
             dict(
                 type='OpenBrandDataset',
                 classes=openbrand_classes,
-                data_root=data_root,
+                data_root=data_root + 'OpenBrands/',
                 ann_file='annotations/test_20210409_20_reduced.json',
                 img_prefix='电商标识检测大赛_train_20210409_20/',
                 pipeline=test_pipeline,
