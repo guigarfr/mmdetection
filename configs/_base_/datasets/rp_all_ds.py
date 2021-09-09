@@ -662,7 +662,7 @@ data = dict(
                 type='XMLDataset',
                 classes=logodet_classes,
                 data_root=data_root + 'LogoDet-3K',
-                ann_file='test.txt',
+                ann_file='test10.txt',
                 min_size=0.5,
                 ann_subdir='',
                 img_prefix='',
@@ -673,7 +673,7 @@ data = dict(
             dict(
                 type='XMLDataset',
                 data_root=data_root + 'logo_dataset',
-                ann_file='ImageSets/Main/test.txt',
+                ann_file='ImageSets/Main/test_micro.txt',
                 img_prefix='',
                 classes=logos_ds_classes,
                 pipeline=test_pipeline,
