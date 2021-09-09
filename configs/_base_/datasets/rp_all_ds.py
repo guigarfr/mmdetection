@@ -614,7 +614,7 @@ data = dict(
         dict(
             type='LogosDataset',
             classes=logos_ds_classes,
-            data_root=data_root + 'logos_dataset',
+            data_root=data_root + 'logo_dataset',
             ann_file='ImageSets/Main/train.txt',
             min_size=0.5,
             ann_subdir='Annotations',
@@ -640,7 +640,7 @@ data = dict(
         ),
         dict(
             type='XMLDataset',
-            data_root=data_root + 'logos_dataset',
+            data_root=data_root + 'logo_dataset',
             ann_file='ImageSets/Main/validation.txt',
             img_prefix='',
             classes=logos_ds_classes,
@@ -664,7 +664,7 @@ data = dict(
         ),
         dict(
             type='XMLDataset',
-            data_root=data_root + 'logos_dataset',
+            data_root=data_root + 'logo_dataset',
             ann_file='ImageSets/Main/test.txt',
             img_prefix='',
             classes=logos_ds_classes,
