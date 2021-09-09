@@ -598,79 +598,88 @@ test_openbrand = dict(
 data = dict(
     samples_per_gpu=4,
     workers_per_gpu=1,
-    train=[
-        dict(
-            type='LogosDataset',
-            classes=logodet_classes,
-            data_root=data_root + 'LogoDet-3K',
-            ann_file='train.txt',
-            min_size=0.5,
-            ann_subdir='',
-            img_prefix='',
-            img_subdir='',
-            pipeline=train_pipeline,
-            force_one_class=True
-        ),
-        dict(
-            type='LogosDataset',
-            classes=logos_ds_classes,
-            data_root=data_root + 'logo_dataset',
-            ann_file='ImageSets/Main/train.txt',
-            min_size=0.5,
-            ann_subdir='Annotations',
-            img_prefix='',
-            img_subdir='JPEGImages',
-            pipeline=train_pipeline,
-            force_one_class=True
-        ),
-        train_openbrand,
-    ],
-    val=[
-        dict(
-            type='LogosDataset',
-            classes=logodet_classes,
-            data_root=data_root + 'LogoDet-3K',
-            ann_file='validation.txt',
-            min_size=0.5,
-            ann_subdir='',
-            img_prefix='',
-            img_subdir='',
-            pipeline=test_pipeline,
-            force_one_class=True
-        ),
-        dict(
-            type='XMLDataset',
-            data_root=data_root + 'logo_dataset',
-            ann_file='ImageSets/Main/validation.txt',
-            img_prefix='',
-            classes=logos_ds_classes,
-            pipeline=test_pipeline,
-            force_one_class=True
-        ),
-        validation_openbrand,
-    ],
-    test=[
-        dict(
-            type='XMLDataset',
-            classes=logodet_classes,
-            data_root=data_root + 'LogoDet-3K',
-            ann_file='test.txt',
-            min_size=0.5,
-            ann_subdir='',
-            img_prefix='',
-            img_subdir='',
-            pipeline=test_pipeline,
-            force_one_class=True
-        ),
-        dict(
-            type='XMLDataset',
-            data_root=data_root + 'logo_dataset',
-            ann_file='ImageSets/Main/test.txt',
-            img_prefix='',
-            classes=logos_ds_classes,
-            pipeline=test_pipeline,
-            force_one_class=True
-        ),
-        test_openbrand,
-    ]
+    train=dict(
+        type='ConcatDataset',
+        datasets=[
+            dict(
+                type='XMLDataset',
+                classes=logodet_classes,
+                data_root=data_root + 'LogoDet-3K',
+                ann_file='train.txt',
+                min_size=0.5,
+                ann_subdir='',
+                img_prefix='',
+                img_subdir='',
+                pipeline=train_pipeline,
+                force_one_class=True
+            ),
+            dict(
+                type='XMLDataset',
+                classes=logos_ds_classes,
+                data_root=data_root + 'logo_dataset',
+                ann_file='ImageSets/Main/train.txt',
+                min_size=0.5,
+                ann_subdir='Annotations',
+                img_prefix='',
+                img_subdir='JPEGImages',
+                pipeline=train_pipeline,
+                force_one_class=True
+            ),
+            train_openbrand,
+        ]
+    ),
+    val=dict(
+        type='ConcatDataset',
+        datasets=[
+            dict(
+                type='XMLDataset',
+                classes=logodet_classes,
+                data_root=data_root + 'LogoDet-3K',
+                ann_file='validation.txt',
+                min_size=0.5,
+                ann_subdir='',
+                img_prefix='',
+                img_subdir='',
+                pipeline=test_pipeline,
+                force_one_class=True
+            ),
+            dict(
+                type='XMLDataset',
+                data_root=data_root + 'logo_dataset',
+                ann_file='ImageSets/Main/validation.txt',
+                img_prefix='',
+                classes=logos_ds_classes,
+                pipeline=test_pipeline,
+                force_one_class=True
+            ),
+            validation_openbrand,
+        ]
+    ),
+    test=dict(
+        type='ConcatDataset',
+        datasets=[
+            dict(
+                type='XMLDataset',
+                classes=logodet_classes,
+                data_root=data_root + 'LogoDet-3K',
+                ann_file='test.txt',
+                min_size=0.5,
+                ann_subdir='',
+                img_prefix='',
+                img_subdir='',
+                pipeline=test_pipeline,
+                force_one_class=True
+            ),
+            dict(
+                type='XMLDataset',
+                data_root=data_root + 'logo_dataset',
+                ann_file='ImageSets/Main/test.txt',
+                img_prefix='',
+                classes=logos_ds_classes,
+                pipeline=test_pipeline,
+                force_one_class=True
+            ),
+            test_openbrand,
+        ]
+    )
 )
