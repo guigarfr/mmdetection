@@ -639,7 +639,7 @@ data = dict(
             force_one_class=True
         ),
         dict(
-            type='LogosDataset',
+            type='XMLDataset',
             data_root=data_root + 'logos_dataset',
             ann_file='ImageSets/Main/validation.txt',
             img_prefix='',
@@ -651,7 +651,7 @@ data = dict(
     ],
     test=[
         dict(
-            type='LogosDataset',
+            type='XMLDataset',
             classes=logodet_classes,
             data_root=data_root + 'LogoDet-3K',
             ann_file='test.txt',
