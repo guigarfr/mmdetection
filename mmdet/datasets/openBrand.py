@@ -20,8 +20,8 @@ class OpenBrandDataset(CustomDataset):
 
     default_class_name = 'Object'
 
-    def __init__(self, *args, **kwargs):
-        self.force_one_class = kwargs.get('force_one_class', False)
+    def __init__(self, *args, force_one_class=False, **kwargs):
+        self.force_one_class = force_one_class
         if self.force_one_class:
             kwargs["classes"] = [self.default_class_name]
         else:
