@@ -663,7 +663,7 @@ data = dict(
             force_one_class=True
         ),
         dict(
-            type='LogosDataset',
+            type='XMLDataset',
             data_root=data_root + 'logos_dataset',
             ann_file='ImageSets/Main/test.txt',
             img_prefix='',
