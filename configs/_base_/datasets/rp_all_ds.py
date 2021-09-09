@@ -368,7 +368,7 @@ validation_openbrand=dict(
         separate_eval=False,
     )
 
-test_openbrand=dict(
+test_openbrand = dict(
         type='ConcatDataset',
         datasets=[
             dict(
@@ -533,6 +533,7 @@ test_openbrand=dict(
             ),
         ],
         separate_eval=False,
+        force_one_class=True
     )
 
 data = dict(
@@ -583,16 +584,5 @@ data = dict(
         ),
         validation_openbrand,
     ],
-    test=dict(
-            type='XMLDataset',
-            classes=logodet_classes,
-            data_root=data_root + 'LogoDet-3K',
-            ann_file='test.txt',
-            min_size=0.5,
-            ann_subdir='',
-            img_prefix='',
-            img_subdir='',
-            pipeline=test_pipeline,
-            force_one_class=True,
-        ),
+    test=test_openbrand
 )
