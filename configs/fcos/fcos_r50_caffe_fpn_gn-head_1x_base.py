@@ -3,8 +3,6 @@ _base_ = [
     '../_base_/default_runtime.py'
 ]
 
-fp16 = dict(loss_scale=512.)
-
 # model settings
 model = dict(
     type='FCOS',
