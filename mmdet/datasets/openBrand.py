@@ -49,38 +49,18 @@ class OpenBrandDataset(CustomDataset):
         for i in self.img_ids:
             info = self.coco.load_imgs([i])[0]
             info['filename'] = info['file_name']
+
+            ann_ids = self.coco.get_ann_ids(img_ids=[i])
+            ann_info = self.coco.load_anns(ann_ids)
+            info['ann'] = self._parse_ann_info(info, ann_info)
+            info['ann']['labels'] = np.array([
+                int(ann['category_id']) if not self.force_one_class else 0
+                for ann in ann_info
+            ])
+
             data_infos.append(info)
+
         return data_infos
-
-    def get_ann_info(self, idx):
-        """Get COCO annotation by index.
-
-        Args:
-            idx (int): Index of data.
-
-        Returns:
-            dict: Annotation info of specified index.
-        """
-
-        img_id = self.data_infos[idx]['id']
-        ann_ids = self.coco.get_ann_ids(img_ids=[img_id])
-        ann_info = self.coco.load_anns(ann_ids)
-        return self._parse_ann_info(self.data_infos[idx], ann_info)
-
-    def get_cat_ids(self, idx):
-        """Get COCO category ids by index.
-
-        Args:
-            idx (int): Index of data.
-
-        Returns:
-            list[int]: All categories in the image of specified index.
-        """
-
-        img_id = self.data_infos[idx]['id']
-        ann_ids = self.coco.get_ann_ids(img_ids=[img_id])
-        ann_info = self.coco.load_anns(ann_ids)
-        return [ann['category_id'] for ann in ann_info]
 
     def _filter_imgs(self, min_size=32):
         """Filter images too small or without ground truths."""
