@@ -98,8 +98,10 @@ class ConcatDataset(_ConcatDataset):
                 end_idx = self.cumulative_sizes[dataset_idx + 1]
 
                 results_per_dataset = results[start_idx:end_idx]
+                dataset_name = dataset.ann_file if hasattr(
+                    dataset, 'ann_file') else 'Dataset'
                 print_log(
-                    f'\nEvaluating {dataset.ann_file} with '
+                    f'\nEvaluating {dataset_name} with '
                     f'{len(results_per_dataset)} images now',
                     logger=logger)
 

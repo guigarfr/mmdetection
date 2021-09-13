@@ -17,6 +17,7 @@ from .seesaw_loss import SeesawLoss
 from .smooth_l1_loss import L1Loss, SmoothL1Loss, l1_loss, smooth_l1_loss
 from .utils import reduce_loss, weight_reduce_loss, weighted_loss
 from .varifocal_loss import VarifocalLoss
+from .eqlv2 import EQLv2
 
 __all__ = [
     'accuracy', 'Accuracy', 'cross_entropy', 'binary_cross_entropy',
@@ -27,5 +28,5 @@ __all__ = [
     'GHMR', 'reduce_loss', 'weight_reduce_loss', 'weighted_loss', 'L1Loss',
     'l1_loss', 'isr_p', 'carl_loss', 'AssociativeEmbeddingLoss',
     'GaussianFocalLoss', 'QualityFocalLoss', 'DistributionFocalLoss',
-    'VarifocalLoss', 'KnowledgeDistillationKLDivLoss', 'SeesawLoss'
+    'VarifocalLoss', 'KnowledgeDistillationKLDivLoss', 'SeesawLoss', 'EQLv2'
 ]

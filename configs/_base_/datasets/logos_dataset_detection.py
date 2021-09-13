@@ -96,7 +96,8 @@ data = dict(
         ann_file='ImageSets/Main/test.txt',
         img_prefix='',
         pipeline=test_pipeline,
-        force_one_class=True
+        force_one_class=True,
     ),
 )
-# evaluation = dict(interval=1, metric='bbox')
+
+evaluation = dict(interval=1, metric='mAP')

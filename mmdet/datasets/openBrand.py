@@ -18,8 +18,14 @@ from .custom import CustomDataset
 @DATASETS.register_module()
 class OpenBrandDataset(CustomDataset):
 
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("classes", "sample_test/labelList.txt")
+    default_class_name = 'Object'
+
+    def __init__(self, *args, force_one_class=False, **kwargs):
+        self.force_one_class = force_one_class
+        if self.force_one_class:
+            kwargs["classes"] = [self.default_class_name]
+        else:
+            kwargs.setdefault("classes", "sample_test/labelList.txt")
         super().__init__(*args, **kwargs)
 
     def load_annotations(self, ann_file):
@@ -33,7 +39,10 @@ class OpenBrandDataset(CustomDataset):
         """
 
         self.coco = COCO(ann_file)
-        self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
+        if self.force_one_class:
+            self.cat_ids = [0]
+        else:
+            self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
         self.img_ids = self.coco.get_img_ids()
         data_infos = []
@@ -135,14 +144,16 @@ class OpenBrandDataset(CustomDataset):
                 continue
             if ann['area'] <= 0 or w < 1 or h < 1:
                 continue
-            if ann['category_id'] not in self.cat_ids:
+            if (not self.force_one_class) and ann[
+                    'category_id'] not in self.cat_ids:
                 continue
             bbox = [x1, y1, x1 + w, y1 + h]
             if ann.get('iscrowd', False):
                 gt_bboxes_ignore.append(bbox)
             else:
                 gt_bboxes.append(bbox)
-                gt_labels.append(self.cat2label[ann['category_id']])
+                cat_id = 0 if self.force_one_class else ann['category_id']
+                gt_labels.append(self.cat2label[cat_id])
                 gt_masks_ann.append(ann['segmentation'])
 
         if gt_bboxes:
