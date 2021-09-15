@@ -1,14 +1,20 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
+import logging
 import os
 import os.path as osp
 import time
 import warnings
 
 import mmcv
+import numpy as np
 import torch
+from matplotlib import pyplot as plt
+from matplotlib.patches import Polygon
 from mmcv import Config, DictAction
+from mmcv.visualization import image as view_img
 from mmcv.cnn import fuse_conv_bn
+from mmcv.image import tensor2imgs
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
                          wrap_fp16_model)
@@ -147,13 +153,24 @@ def main():
     if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
         raise ValueError('The output file must be a pkl file.')
 
+
     cfg = Config.fromfile(args.config)
+
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
+
     # import modules from string list.
     if cfg.get('custom_imports', None):
         from mmcv.utils import import_modules_from_strings
         import_modules_from_strings(**cfg['custom_imports'])
+
+    # init distributed env first, since logger depends on the dist info.
+    if args.launcher == 'none':
+        distributed = False
+    else:
+        distributed = True
+        init_dist(args.launcher, **cfg.dist_params)
+
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
@@ -172,22 +189,7 @@ def main():
     # in case the test dataset is concatenated
     samples_per_gpu = replace_pipeline(
         cfg.data.test,
-        eval=args.eval,
         samples_per_gpu=cfg.data.pop('samples_per_gpu', None))
-
-    # init distributed env first, since logger depends on the dist info.
-    if args.launcher == 'none':
-        distributed = False
-    else:
-        distributed = True
-        init_dist(args.launcher, **cfg.dist_params)
-
-    rank, _ = get_dist_info()
-    # allows not to create
-    if args.work_dir is not None and rank == 0:
-        mmcv.mkdir_or_exist(osp.abspath(args.work_dir))
-        timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
-        json_file = osp.join(args.work_dir, f'eval_{timestamp}.json')
 
     # build the dataloader
     dataset = build_dataset(cfg.data.test)
@@ -204,6 +206,7 @@ def main():
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
+
     checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)
@@ -216,46 +219,68 @@ def main():
 
     if not distributed:
         model = MMDataParallel(model, device_ids=[0])
-        outputs = single_gpu_test(model, data_loader, args.show, args.show_dir,
-                                  args.show_score_thr)
     else:
         model = MMDistributedDataParallel(
             model.cuda(),
             device_ids=[torch.cuda.current_device()],
             broadcast_buffers=False)
-        outputs = multi_gpu_test(model, data_loader, args.tmpdir,
-                                 args.gpu_collect)
 
-    rank, _ = get_dist_info()
-    if rank == 0:
-        if args.out:
-            print(f'\nwriting results to {args.out}')
-            mmcv.dump(outputs, args.out)
-        kwargs = {} if args.eval_options is None else args.eval_options
-        if args.format_only:
-            dataset.format_results(outputs, **kwargs)
-        if args.eval:
-            metric_dict = dict()
-            for selected_metric in args.eval:
-                eval_kwargs = cfg.get('evaluation', {}).copy()
-                # hard-code way to remove EvalHook args
-                for key in [
-                        'interval', 'tmpdir', 'start', 'gpu_collect', 'save_best',
-                        'rule'
-                ]:
-                    eval_kwargs.pop(key, None)
-                eval_kwargs.update(dict(metric=selected_metric, **kwargs))
-                eval_kwargs.update({
-                    'proposal_nums': (1, 2, 3, 4, 5, 10)
-                })
-                metric = dataset.evaluate(outputs, **eval_kwargs)
-                print(metric)
-                metric_dict[selected_metric] = metric
-            if args.work_dir is not None and rank == 0:
-                mmcv.dump(
-                    dict(config=args.config, metric=metric_dict),
-                    json_file)
+    rank, world_size = get_dist_info()
+    # allows not to create
+    if args.work_dir is not None and rank == 0:
+        mmcv.mkdir_or_exist(osp.abspath(args.work_dir))
+        timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
+        json_file = osp.join(args.work_dir, f'eval_{timestamp}.json')
+
+    results = []
+    prog_bar = mmcv.ProgressBar(len(dataset)) if rank == 0 else None
+    time.sleep(2)  # This line can prevent deadlock problem in some cases.
+    for i, data in enumerate(data_loader):
+        with torch.no_grad():
+            result = model(return_loss=False, rescale=True, **data)
+        results.append(result)
+
+        if prog_bar is not None:
+            for _ in range(len(result)):
+                prog_bar.update()
+
+        batch_size = len(result)
+
+        if batch_size == 1 and isinstance(result['img'][0], torch.Tensor):
+            img_tensor = data['img'][0]
+        else:
+            img_tensor = data['img'][0].data[0]
+        img_metas = data['img_metas'][0].data[0]
+        imgs = tensor2imgs(img_tensor, **img_metas[0]['img_norm_cfg'])
+        assert len(imgs) == len(img_metas)
+
+        if isinstance(result, tuple):
+            bbox_result, segm_result = result
+        else:
+            bbox_result, segm_result = result, None
+
+        for i, (img, img_meta, bboxes) in enumerate(
+                zip(imgs, img_metas, bbox_result)):
+            logging.info(img.shape)
+            h, w, _ = img_meta['img_shape']
+            img_show = img[:h, :w, :]
+
+            ori_h, ori_w = img_meta['ori_shape'][:-1]
+            img_show = mmcv.imresize(img_show, (ori_w, ori_h))
+            logging.info(img_show[0:3, 0:3, :])
+
+            for class_idx, class_bboxes in enumerate(bboxes):
+                for i_bbox, bbox in enumerate(class_bboxes):
+                    bbox_int = bbox.astype(np.int32)
+                    logging.info(bbox_int)
+                    crop = img_show[bbox_int[0]:bbox_int[2], bbox_int[1]:bbox_int[3],:]
+                    title = "{}-{}-{}".format(img_meta['filename'], class_idx, i_bbox)
+                    plt.title(title)
+                    plt.imshow(crop)
+                    plt.savefig('foo_{}_{}_{}.jpg'.format(i, class_idx, i_bbox))
+                    logging.info("saved image")
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     main()
