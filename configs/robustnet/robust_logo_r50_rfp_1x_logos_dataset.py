@@ -1,8 +1,15 @@
 _base_ = [
     '../_base_/models/robust_logo_r50_rfp.py',
-    '../_base_/datasets/logos_dataset_detection.py',
+    '../_base_/datasets/rp_logos_dataset.py',
     '../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py'
 ]
+
+data = dict(
+    test=dict(
+        force_one_class=True,
+        collapse_multiclass=True,
+    ),
+)
 
 # Modify grad clip
 optimizer_config = dict(_delete_=True, grad_clip=dict(max_norm=5, norm_type=2))
