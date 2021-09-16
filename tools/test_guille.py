@@ -18,11 +18,13 @@ from mmcv.image import tensor2imgs
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
 from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
                          wrap_fp16_model)
-
+from mmcv.parallel import collate, scatter
 from mmdet.apis import multi_gpu_test, single_gpu_test
 from mmdet.datasets import (build_dataloader, build_dataset,
                             replace_ImageToTensor)
 from mmdet.models import build_detector
+
+from mmdet.datasets.pipelines import Compose
 
 
 def replace_pipeline(my_cfg, eval=True, samples_per_gpu=None):
@@ -189,6 +191,7 @@ def main():
     # in case the test dataset is concatenated
     samples_per_gpu = replace_pipeline(
         cfg.data.test,
+        eval=args.eval,
         samples_per_gpu=cfg.data.pop('samples_per_gpu', None))
 
     # build the dataloader
@@ -233,10 +236,23 @@ def main():
         json_file = osp.join(args.work_dir, f'eval_{timestamp}.json')
 
     model.eval()
+
+    feature_cfg = Config.fromfile(
+        '/home/cgarriga/sources/mmdetection/configs/resnet_features.py')
+    feature_model = build_detector(
+        feature_cfg.model, test_cfg=feature_cfg.get('test_cfg'))
+    feature_model.eval()
+
+    feature_cfg.data.test.pipeline = replace_ImageToTensor(
+        feature_cfg.data.test.pipeline)
+    feature_test_pipeline = Compose(feature_cfg.data.test.pipeline)
+
     results = []
     prog_bar = mmcv.ProgressBar(len(dataset)) if rank == 0 else None
     time.sleep(2)  # This line can prevent deadlock problem in some cases.
+
     for i, data in enumerate(data_loader):
+        cropped_imgs = []
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
         results.append(result)
@@ -260,28 +276,54 @@ def main():
         else:
             bbox_result, segm_result = result, None
 
+        from mmdet.apis import show_result_pyplot
+
         for i, (img, img_meta, bboxes) in enumerate(
                 zip(imgs, img_metas, bbox_result)):
-            logging.info(img.shape)
             h, w, _ = img_meta['img_shape']
             img_show = img[:h, :w, :]
 
             ori_h, ori_w = img_meta['ori_shape'][:-1]
             img_show = mmcv.imresize(img_show, (ori_w, ori_h))
-            logging.info(img_show[0:3, 0:3, :])
 
+            show_result_pyplot(model, img_show, bboxes, score_thr=0.01)
+
+            inner_cropped_imgs = []
             for class_idx, class_bboxes in enumerate(bboxes):
                 for i_bbox, bbox in enumerate(class_bboxes):
                     bbox_int = bbox.astype(np.int32)
-                    logging.info(bbox_int)
-                    crop = img_show[
-                           bbox_int[1]:bbox_int[3],
-                           bbox_int[0]:bbox_int[2]
-                           ]
-                    title = "{}-{}-{}".format(img_meta['filename'], class_idx, i_bbox)
-                    plt.title(title)
-                    plt.imshow(crop)
-                    plt.show()
+
+                    x1, x2 = sorted([bbox_int[0], bbox_int[2]])
+                    y1, y2 = sorted([bbox_int[1], bbox_int[3]])
+                    crop = img_show[y1:y2, x1:x2]
+                    inner_cropped_imgs.append(crop)
+            cropped_imgs.append(inner_cropped_imgs)
+
+        logging.info("EXTRACTING FEATURES")
+
+        datas = []
+        for img_meta, inner_cropped_imgs in zip(img_metas, cropped_imgs):
+            for cropid, img in enumerate(inner_cropped_imgs):
+                assert img is not None
+                # prepare data
+                dats = dict(
+                    img=img,
+                )
+                # build the data pipeline
+                dats = feature_test_pipeline(dats)
+                datas.append(dats)
+
+        dats = collate(datas, samples_per_gpu=20)
+        # just get the actual data from DataContainer
+
+        if next(feature_model.parameters()).is_cuda:
+            # scatter to specified GPU. [0] if single GPU
+            dats = scatter(dats, ['cuda:0'])[0]
+
+        with torch.no_grad():
+            for crop_batch in dats['img'].data:
+                feats = feature_model.extract_feat(crop_batch)
+                print(feats)
 
 
 if __name__ == '__main__':
