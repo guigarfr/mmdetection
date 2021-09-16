@@ -232,6 +232,7 @@ def main():
         timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
         json_file = osp.join(args.work_dir, f'eval_{timestamp}.json')
 
+    model.eval()
     results = []
     prog_bar = mmcv.ProgressBar(len(dataset)) if rank == 0 else None
     time.sleep(2)  # This line can prevent deadlock problem in some cases.
@@ -273,12 +274,14 @@ def main():
                 for i_bbox, bbox in enumerate(class_bboxes):
                     bbox_int = bbox.astype(np.int32)
                     logging.info(bbox_int)
-                    crop = img_show[bbox_int[0]:bbox_int[2], bbox_int[1]:bbox_int[3],:]
+                    crop = img_show[
+                           bbox_int[1]:bbox_int[3],
+                           bbox_int[0]:bbox_int[2]
+                           ]
                     title = "{}-{}-{}".format(img_meta['filename'], class_idx, i_bbox)
                     plt.title(title)
                     plt.imshow(crop)
-                    plt.savefig('foo_{}_{}_{}.jpg'.format(i, class_idx, i_bbox))
-                    logging.info("saved image")
+                    plt.show()
 
 
 if __name__ == '__main__':

@@ -33,6 +33,8 @@ class GlobalAveragePooling(nn.Module):
         pass
 
     def forward(self, inputs):
+        print(type(inputs))
+        print(len(inputs), inputs[0].shape)
         if isinstance(inputs, tuple):
             outs = tuple([self.gap(x) for x in inputs])
             outs = tuple(

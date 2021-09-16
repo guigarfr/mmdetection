@@ -26,7 +26,6 @@ from mmdet.models import build_detector
 
 from mmdet.datasets.pipelines import Compose
 
-import faiss
 
 def replace_pipeline(my_cfg, eval=True, samples_per_gpu=None):
     if isinstance(my_cfg, dict):
@@ -55,34 +54,12 @@ def replace_pipeline(my_cfg, eval=True, samples_per_gpu=None):
 
     return samples_per_gpu
 
-feature_extractors = dict(
-    resnet50=(
-        'mmclassification/configs/resnet/resnet50_b32x8_imagenet.py',
-        'mmclassification/resnet50_batch256_imagenet_20200708-cfb998bf.pth'
-    ),
-    mobilenetv2=(
-        'mmclassification/configs/mobilenet_v2/mobilenet_v2_b32x8_imagenet.py',
-        'mmclassification/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth'
-    )
-)
-
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description='MMDet test (and eval) a model')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
-    parser.add_argument(
-        '--source-path',
-        help='path to the folder containing helper projects',
-        default='/home/cgarriga/sources',
-    )
-    parser.add_argument(
-        '--feature-extractor',
-        help='Specify the feature extractor to be used',
-        choices=list(feature_extractors.keys()),
-        default='resnet50'
-    )
     parser.add_argument(
         '--work-dir',
         help='the directory to save the file containing evaluation metrics')
@@ -200,6 +177,17 @@ def main():
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
 
+    cfg.model.pretrained = None
+    if cfg.model.get('neck'):
+        if isinstance(cfg.model.neck, list):
+            for neck_cfg in cfg.model.neck:
+                if neck_cfg.get('rfp_backbone'):
+                    if neck_cfg.rfp_backbone.get('pretrained'):
+                        neck_cfg.rfp_backbone.pretrained = None
+        elif cfg.model.neck.get('rfp_backbone'):
+            if cfg.model.neck.rfp_backbone.get('pretrained'):
+                cfg.model.neck.rfp_backbone.pretrained = None
+
     # in case the test dataset is concatenated
     samples_per_gpu = replace_pipeline(
         cfg.data.test,
@@ -249,33 +237,19 @@ def main():
 
     model.eval()
 
-    config_path, checkpoint_path = feature_extractors[args.feature_extractor]
-    feature_cfg = mmcv.Config.fromfile(
-        os.path.join(args.source_path, config_path)
-    )
-    from mmcls.apis import init_model as feat_init_model
+    feature_cfg = Config.fromfile(
+        '/home/cgarriga/sources/mmdetection/configs/resnet_features.py')
+    feature_model = build_detector(
+        feature_cfg.model, test_cfg=feature_cfg.get('test_cfg'))
+    feature_model.eval()
 
-    feature_model = feat_init_model(
-        feature_cfg,
-        os.path.join(args.source_path, checkpoint_path),
-        'cpu'
-    )
-
-    from mmcls.datasets.pipelines import Compose as feat_compose
-
-    feature_cfg.data.test.pipeline.pop(0)
-    feature_test_pipeline = feat_compose(feature_cfg.data.test.pipeline)
+    feature_cfg.data.test.pipeline = replace_ImageToTensor(
+        feature_cfg.data.test.pipeline)
+    feature_test_pipeline = Compose(feature_cfg.data.test.pipeline)
 
     results = []
     prog_bar = mmcv.ProgressBar(len(dataset)) if rank == 0 else None
     time.sleep(2)  # This line can prevent deadlock problem in some cases.
-
-    import pickle
-    with open('class_labels', 'rb') as f:
-        class_labels = pickle.load(f)
-        print(class_labels)
-    index = faiss.read_index('index_100')
-    assert index.is_trained
 
     for i, data in enumerate(data_loader):
         cropped_imgs = []
@@ -317,8 +291,6 @@ def main():
             inner_cropped_imgs = []
             for class_idx, class_bboxes in enumerate(bboxes):
                 for i_bbox, bbox in enumerate(class_bboxes):
-                    if bbox[4] < 0.1:
-                        continue
                     bbox_int = bbox.astype(np.int32)
 
                     x1, x2 = sorted([bbox_int[0], bbox_int[2]])
@@ -330,41 +302,28 @@ def main():
         logging.info("EXTRACTING FEATURES")
 
         datas = []
-        raw_imgs = []
         for img_meta, inner_cropped_imgs in zip(img_metas, cropped_imgs):
             for cropid, img in enumerate(inner_cropped_imgs):
                 assert img is not None
                 # prepare data
-                dats = dict(img=img)
+                dats = dict(
+                    img=img,
+                )
                 # build the data pipeline
                 dats = feature_test_pipeline(dats)
                 datas.append(dats)
 
-        dats = collate(datas, samples_per_gpu=1)
+        dats = collate(datas, samples_per_gpu=20)
         # just get the actual data from DataContainer
 
         if next(feature_model.parameters()).is_cuda:
             # scatter to specified GPU. [0] if single GPU
             dats = scatter(dats, ['cuda:0'])[0]
 
-        with torch.inference_mode():
+        with torch.no_grad():
             for crop_batch in dats['img'].data:
-                feats = feature_model.extract_feat(crop_batch.unsqueeze(0))
-
-                for feat in feats.numpy():
-                    ds, ids = index.search(np.array([feat]), 5)
-                    chosen_one = sorted(zip(ds, ids), key=lambda x: x[0])[0]
-                    print(
-                        "chosen id: ",
-                        chosen_one,
-                        list(class_labels.keys())[
-                            list(class_labels.values()).index(chosen_one[1][0])]
-                    )
-
-                    plt.imshow(tensor2imgs(crop_batch.unsqueeze(0),
-                                           **feature_cfg.img_norm_cfg)[0])
-                    plt.show()
-        break
+                feats = feature_model.extract_feat(crop_batch)
+                print(feats)
 
 
 if __name__ == '__main__':
