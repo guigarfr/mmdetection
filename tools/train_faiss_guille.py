@@ -56,33 +56,10 @@ def replace_pipeline(my_cfg, eval=True, samples_per_gpu=None):
     return samples_per_gpu
 
 
-feature_extractors = dict(
-    resnet50=(
-        'mmclassification/configs/resnet/resnet50_b32x8_imagenet.py',
-        'mmclassification/resnet50_batch256_imagenet_20200708-cfb998bf.pth'
-    ),
-    mobilenetv2=(
-        'mmclassification/configs/mobilenet_v2/mobilenet_v2_b32x8_imagenet.py',
-        'mmclassification/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth'
-    )
-)
-
-
 def parse_args():
     parser = argparse.ArgumentParser(
         description='MMDet test (and eval) a model')
     parser.add_argument('config', help='test config file path')
-    parser.add_argument(
-        '--source-path',
-        help='path to the folder containing helper projects',
-        default='/home/cgarriga/sources',
-    )
-    parser.add_argument(
-        '--feature-extractor',
-        help='Specify the feature extractor to be used',
-        choices=list(feature_extractors.keys()),
-        default='resnet50'
-    )
     parser.add_argument(
         '--work-dir',
         help='the directory to save the file containing evaluation metrics')
@@ -238,64 +215,55 @@ def main():
     # build the dataloader
     dataset = build_dataset(cfg.data.train)
 
-    if isinstance(dataset, ConcatDataset):
-        class_dict = {}
-        for d in dataset.datasets:
-            if isinstance(d, ConcatDataset):
-                for ds in d.datasets:
-                    class_dict.update(ds.cat2label)
-            else:
-                class_dict.update(d.cat2label)
-    else:
-        class_dict = dataset.cat2label
+    class_dict = {}
+    for d in dataset.datasets:
+        if isinstance(d, ConcatDataset):
+            for ds in d.datasets:
+                class_dict.update(ds.cat2label)
+        else:
+            class_dict.update(d.cat2label)
 
     import pickle
     with open('class_labels', 'wb+') as f:
         pickle.dump(class_dict, f)
     # Get train samples
 
-    config_path, checkpoint_path = feature_extractors[args.feature_extractor]
-    feature_cfg = mmcv.Config.fromfile(
-        os.path.join(args.source_path, config_path)
-    )
-    from mmcls.apis import init_model as feat_init_model
+    feature_cfg = Config.fromfile(
+        '/home/cgarriga/sources/mmdetection/configs/resnet_features.py')
+    feature_model = build_detector(
+        feature_cfg.model, test_cfg=feature_cfg.get('test_cfg'))
+    feature_model.eval()
 
-    feature_model = feat_init_model(
-        feature_cfg,
-        os.path.join(args.source_path, checkpoint_path),
-        'cpu'
-    )
-
-    from mmcls.datasets.pipelines import Compose as feat_compose
-
-    feature_cfg.data.test.pipeline.pop(0)
-    feature_test_pipeline = feat_compose(feature_cfg.data.test.pipeline)
+    feature_cfg.data.test.pipeline = replace_ImageToTensor(
+        feature_cfg.data.test.pipeline)
+    feature_test_pipeline = Compose(feature_cfg.data.test.pipeline)
 
     import faiss
 
-    out_feats = feature_cfg._cfg_dict['model']['head']['in_channels']
-    quantizer = faiss.IndexFlatL2(out_feats)
-    index = faiss.IndexIVFFlat(quantizer, out_feats, 2, faiss.METRIC_L2)
+    quantizer = faiss.IndexFlatL2(2048)
+    index = faiss.IndexIVFFlat(quantizer, 2048, 2, faiss.METRIC_L2)
 
-    MAX_SAMPLES = 1000
+    MAX_SAMPLES = 100
     train = []
     for i, samples in enumerate(dataset):
         if i > MAX_SAMPLES:
             break
 
         img = samples['img']
-        label = samples['gt_label']
-        dats = dict(
-            img=img,
-        )
-        # build the data pipeline
-        dats = feature_test_pipeline(dats)
-
-        with torch.no_grad():
-            feats = feature_model.extract_feat(
-                torch.as_tensor([dats['img'].data.numpy()])
+        bboxes = samples['gt_bboxes']
+        labels = samples['gt_labels']
+        for bbox, label in zip(bboxes, labels):
+            dats = dict(
+                img=img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])],
             )
-            train.append((feats.numpy().astype('float32'), label))
+            # build the data pipeline
+            dats = feature_test_pipeline(dats)
+
+            with torch.no_grad():
+                feats = feature_model.extract_feat(
+                    torch.as_tensor([dats['img'].data.numpy()])
+                )
+                train.append((feats[0].numpy().astype('float32'), label))
         print(i)
     feats, labels = zip(*train)
     print(len(feats))
@@ -303,8 +271,8 @@ def main():
     print(feats.shape)
     print(feats[0].shape)
     index.train(feats)
-    index.add_with_ids(feats, np.array(labels).flatten())
-    faiss.write_index(index, f'index_100_{args.feature_extractor}')
+    index.add_with_ids(feats, np.array(labels))
+    faiss.write_index(index, 'index_100')
 
 
 if __name__ == '__main__':
