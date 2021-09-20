@@ -45,6 +45,20 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+import itertools
+
+def get_dataset_config(cfg):
+    if isinstance(cfg, Sequence):
+        return itertools.chain.from_iterable([get_dataset_config(c) for c in
+                                              cfg])
+    elif isinstance(cfg, dict) and \
+         hasattr(cfg, 'datasets') and \
+         isinstance(cfg.datasets, list):
+        return itertools.chain.from_iterable([get_dataset_config(c) for c in
+                                              cfg['datasets']])
+    else:
+        return [cfg]
+
 
 def retrieve_data_cfg(config_path, skip_type, cfg_options):
 
@@ -65,16 +79,11 @@ def retrieve_data_cfg(config_path, skip_type, cfg_options):
             'type'] != 'MultiImageMixDataset':
         train_data_cfg = train_data_cfg['dataset']
 
-    if isinstance(train_data_cfg, Sequence):
-        [skip_pipeline_steps(c) for c in train_data_cfg]
-    elif isinstance(train_data_cfg, dict) and \
-         hasattr(train_data_cfg, 'datasets') and \
-         isinstance(train_data_cfg.datasets, list):
-        [skip_pipeline_steps(c) for c in train_data_cfg['datasets']]
-    else:
-        skip_pipeline_steps(train_data_cfg)
+    for c in get_dataset_config(train_data_cfg):
+        skip_pipeline_steps(c)
 
     return cfg
+
 
 
 def main():
