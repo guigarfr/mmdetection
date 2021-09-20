@@ -6,6 +6,7 @@ import os.path as osp
 import time
 import warnings
 
+from collections.abc import Sequence
 import mmcv
 import numpy as np
 import torch
@@ -21,12 +22,11 @@ from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
 from mmcv.parallel import collate, scatter
 from mmdet.apis import multi_gpu_test, single_gpu_test
 from mmdet.datasets import (build_dataloader, build_dataset,
-                            replace_ImageToTensor)
+                            replace_ImageToTensor, ConcatDataset)
 from mmdet.models import build_detector
 
 from mmdet.datasets.pipelines import Compose
 
-import faiss
 
 def replace_pipeline(my_cfg, eval=True, samples_per_gpu=None):
     if isinstance(my_cfg, dict):
@@ -60,7 +60,6 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='MMDet test (and eval) a model')
     parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint', help='checkpoint file')
     parser.add_argument(
         '--work-dir',
         help='the directory to save the file containing evaluation metrics')
@@ -141,6 +140,46 @@ def parse_args():
     return args
 
 
+import itertools
+
+def get_dataset_config(cfg):
+    if isinstance(cfg, Sequence):
+        return itertools.chain.from_iterable([get_dataset_config(c) for c in
+                                              cfg])
+    elif isinstance(cfg, dict) and \
+         hasattr(cfg, 'datasets') and \
+         isinstance(cfg.datasets, list):
+        return itertools.chain.from_iterable([get_dataset_config(c) for c in
+                                              cfg['datasets']])
+    else:
+        return [cfg]
+
+
+def retrieve_data_cfg(config_path, skip_type, cfg_options):
+
+    def skip_pipeline_steps(config):
+        config['pipeline'] = [
+            x for x in config.pipeline if x['type'] not in skip_type
+        ]
+
+    cfg = Config.fromfile(config_path)
+    if cfg_options is not None:
+        cfg.merge_from_dict(cfg_options)
+    # import modules from string list.
+    if cfg.get('custom_imports', None):
+        from mmcv.utils import import_modules_from_strings
+        import_modules_from_strings(**cfg['custom_imports'])
+    train_data_cfg = cfg.data.train
+    while 'dataset' in train_data_cfg and train_data_cfg[
+            'type'] != 'MultiImageMixDataset':
+        train_data_cfg = train_data_cfg['dataset']
+
+    for c in get_dataset_config(train_data_cfg):
+        skip_pipeline_steps(c)
+
+    return cfg
+
+
 def main():
     args = parse_args()
 
@@ -156,16 +195,11 @@ def main():
     if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
         raise ValueError('The output file must be a pkl file.')
 
-
-    cfg = Config.fromfile(args.config)
-
-    if args.cfg_options is not None:
-        cfg.merge_from_dict(args.cfg_options)
-
-    # import modules from string list.
-    if cfg.get('custom_imports', None):
-        from mmcv.utils import import_modules_from_strings
-        import_modules_from_strings(**cfg['custom_imports'])
+    cfg = retrieve_data_cfg(
+        args.config,
+        ['DefaultFormatBundle', 'Normalize', 'Collect'],
+        args.cfg_options
+    )
 
     # init distributed env first, since logger depends on the dist info.
     if args.launcher == 'none':
@@ -178,170 +212,67 @@ def main():
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
 
-    # in case the test dataset is concatenated
-    samples_per_gpu = replace_pipeline(
-        cfg.data.test,
-        eval=args.eval,
-        samples_per_gpu=cfg.data.pop('samples_per_gpu', None))
-
     # build the dataloader
-    dataset = build_dataset(cfg.data.test)
-    data_loader = build_dataloader(
-        dataset,
-        samples_per_gpu=samples_per_gpu,
-        workers_per_gpu=cfg.data.workers_per_gpu,
-        dist=distributed,
-        shuffle=False)
+    dataset = build_dataset(cfg.data.train)
 
-    # build the model and load checkpoint
-    cfg.model.train_cfg = None
-    model = build_detector(cfg.model, test_cfg=cfg.get('test_cfg'))
-    fp16_cfg = cfg.get('fp16', None)
-    if fp16_cfg is not None:
-        wrap_fp16_model(model)
+    class_dict = {}
+    for d in dataset.datasets:
+        if isinstance(d, ConcatDataset):
+            for ds in d.datasets:
+                class_dict.update(ds.cat2label)
+        else:
+            class_dict.update(d.cat2label)
 
-    checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
-    if args.fuse_conv_bn:
-        model = fuse_conv_bn(model)
-    # old versions did not save class info in checkpoints, this walkaround is
-    # for backward compatibility
-    if 'CLASSES' in checkpoint.get('meta', {}):
-        model.CLASSES = checkpoint['meta']['CLASSES']
-    else:
-        model.CLASSES = dataset.CLASSES
-
-    if not distributed:
-        model = MMDataParallel(model, device_ids=[0])
-    else:
-        model = MMDistributedDataParallel(
-            model.cuda(),
-            device_ids=[torch.cuda.current_device()],
-            broadcast_buffers=False)
-
-    rank, world_size = get_dist_info()
-    # allows not to create
-    if args.work_dir is not None and rank == 0:
-        mmcv.mkdir_or_exist(osp.abspath(args.work_dir))
-        timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
-        json_file = osp.join(args.work_dir, f'eval_{timestamp}.json')
-
-    model.eval()
+    import pickle
+    with open('class_labels', 'wb+') as f:
+        pickle.dump(class_dict, f)
+    # Get train samples
 
     feature_cfg = Config.fromfile(
         '/home/cgarriga/sources/mmdetection/configs/resnet_features.py')
-    from mmdet.apis import init_detector
-    feature_model = init_detector(
-        '/home/cgarriga/sources/mmdetection/configs/resnet_features.py',
-        '/home/cgarriga/.cache/torch/hub/checkpoints/resnet50_msra-5891d200.pth',
-        device='cpu'
-    )
+    feature_model = build_detector(
+        feature_cfg.model, test_cfg=feature_cfg.get('test_cfg'))
+    feature_model.eval()
 
     feature_cfg.data.test.pipeline = replace_ImageToTensor(
         feature_cfg.data.test.pipeline)
     feature_test_pipeline = Compose(feature_cfg.data.test.pipeline)
 
-    results = []
-    prog_bar = mmcv.ProgressBar(len(dataset)) if rank == 0 else None
-    time.sleep(2)  # This line can prevent deadlock problem in some cases.
+    import faiss
 
-    import pickle
-    with open('class_labels', 'rb') as f:
-        class_labels = pickle.load(f)
-        print(class_labels)
-    index = faiss.read_index('index_100')
-    assert index.is_trained
+    quantizer = faiss.IndexFlatL2(2048)
+    index = faiss.IndexIVFFlat(quantizer, 2048, 2, faiss.METRIC_L2)
 
-    for i, data in enumerate(data_loader):
-        cropped_imgs = []
-        with torch.no_grad():
-            result = model(return_loss=False, rescale=True, **data)
-        results.append(result)
+    MAX_SAMPLES = 100
+    train = []
+    for i, samples in enumerate(dataset):
+        if i > MAX_SAMPLES:
+            break
 
-        if prog_bar is not None:
-            for _ in range(len(result)):
-                prog_bar.update()
+        img = samples['img']
+        bboxes = samples['gt_bboxes']
+        labels = samples['gt_labels']
+        for bbox, label in zip(bboxes, labels):
+            dats = dict(
+                img=img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])],
+            )
+            # build the data pipeline
+            dats = feature_test_pipeline(dats)
 
-        batch_size = len(result)
-
-        if batch_size == 1 and isinstance(result['img'][0], torch.Tensor):
-            img_tensor = data['img'][0]
-        else:
-            img_tensor = data['img'][0].data[0]
-        img_metas = data['img_metas'][0].data[0]
-        imgs = tensor2imgs(img_tensor, **img_metas[0]['img_norm_cfg'])
-        assert len(imgs) == len(img_metas)
-
-        if isinstance(result, tuple):
-            bbox_result, segm_result = result
-        else:
-            bbox_result, segm_result = result, None
-
-        from mmdet.apis import show_result_pyplot
-
-        for i, (img, img_meta, bboxes) in enumerate(
-                zip(imgs, img_metas, bbox_result)):
-            h, w, _ = img_meta['img_shape']
-            img_show = img[:h, :w, :]
-
-            ori_h, ori_w = img_meta['ori_shape'][:-1]
-            img_show = mmcv.imresize(img_show, (ori_w, ori_h))
-
-            show_result_pyplot(model, img_show, bboxes, score_thr=0.01)
-
-            inner_cropped_imgs = []
-            for class_idx, class_bboxes in enumerate(bboxes):
-                for i_bbox, bbox in enumerate(class_bboxes):
-                    if bbox[4] < 0.1:
-                        continue
-                    bbox_int = bbox.astype(np.int32)
-
-                    x1, x2 = sorted([bbox_int[0], bbox_int[2]])
-                    y1, y2 = sorted([bbox_int[1], bbox_int[3]])
-                    crop = img_show[y1:y2, x1:x2]
-                    inner_cropped_imgs.append(crop)
-            cropped_imgs.append(inner_cropped_imgs)
-
-        logging.info("EXTRACTING FEATURES")
-
-        datas = []
-        for img_meta, inner_cropped_imgs in zip(img_metas, cropped_imgs):
-            for cropid, img in enumerate(inner_cropped_imgs):
-                assert img is not None
-                # prepare data
-                dats = dict(
-                    img=img,
+            with torch.no_grad():
+                feats = feature_model.extract_feat(
+                    torch.as_tensor([dats['img'].data.numpy()])
                 )
-                # build the data pipeline
-                dats = feature_test_pipeline(dats)
-                datas.append(dats)
-
-        dats = collate(datas, samples_per_gpu=1)
-        # just get the actual data from DataContainer
-
-        if next(feature_model.parameters()).is_cuda:
-            # scatter to specified GPU. [0] if single GPU
-            dats = scatter(dats, ['cuda:0'])[0]
-
-        with torch.inference_mode():
-            for crop_batch in dats['img'].data:
-                feats = feature_model.extract_feat(torch.as_tensor(np.ones((
-                    1, 3, 224, 224))).float())
-                plt.imshow(
-                    np.moveaxis(crop_batch[0].numpy(), 0, -1)[..., [2, 1, 0]])
-                plt.show()
-                print(feats[0].numpy().shape)
-                print(feats[0].numpy()[0])
-                for feat in feats[0].numpy():
-                    ds, ids = index.search(np.array([feat]), 5)
-                    print("distances shape :", ds.shape)
-                    print("result ids", ids)
-                    chosen_one = sorted(zip(ds, ids), key=lambda x: x[0])[0]
-                    print(
-                        "chosen id: ",
-                        chosen_one,
-                        list(class_labels.keys())[list(class_labels.values()).index(chosen_one[1][0])]
-                    )
-        break
+                train.append((feats[0].numpy().astype('float32'), label))
+        print(i)
+    feats, labels = zip(*train)
+    print(len(feats))
+    feats = np.vstack(feats)
+    print(feats.shape)
+    print(feats[0].shape)
+    index.train(feats)
+    index.add_with_ids(feats, np.array(labels))
+    faiss.write_index(index, 'index_100')
 
 
 if __name__ == '__main__':
