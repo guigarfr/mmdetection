@@ -227,18 +227,23 @@ def main():
 
     model.eval()
 
-    feature_cfg = Config.fromfile(
-        '/home/cgarriga/sources/mmdetection/configs/resnet_features.py')
-    from mmdet.apis import init_detector
-    feature_model = init_detector(
-        '/home/cgarriga/sources/mmdetection/configs/resnet_features.py',
-        '/home/cgarriga/.cache/torch/hub/checkpoints/resnet50_msra-5891d200.pth',
-        device='cpu'
+    feature_cfg = mmcv.Config.fromfile(
+        '/home/cgarriga/sources/mmclassification/configs/resnet'
+        '/resnet50_b32x8_imagenet.py'
+    )
+    from mmcls.apis import init_model as feat_init_model
+
+    feature_model = feat_init_model(
+        feature_cfg,
+        '/home/cgarriga/sources/mmclassification'
+        '/resnet50_batch256_imagenet_20200708-cfb998bf.pth',
+        'cpu'
     )
 
-    feature_cfg.data.test.pipeline = replace_ImageToTensor(
-        feature_cfg.data.test.pipeline)
-    feature_test_pipeline = Compose(feature_cfg.data.test.pipeline)
+    from mmcls.datasets.pipelines import Compose as feat_compose
+
+    feature_cfg.data.test.pipeline.pop(0)
+    feature_test_pipeline = feat_compose(feature_cfg.data.test.pipeline)
 
     results = []
     prog_bar = mmcv.ProgressBar(len(dataset)) if rank == 0 else None
@@ -304,13 +309,12 @@ def main():
         logging.info("EXTRACTING FEATURES")
 
         datas = []
+        raw_imgs = []
         for img_meta, inner_cropped_imgs in zip(img_metas, cropped_imgs):
             for cropid, img in enumerate(inner_cropped_imgs):
                 assert img is not None
                 # prepare data
-                dats = dict(
-                    img=img,
-                )
+                dats = dict(img=img)
                 # build the data pipeline
                 dats = feature_test_pipeline(dats)
                 datas.append(dats)
@@ -324,23 +328,21 @@ def main():
 
         with torch.inference_mode():
             for crop_batch in dats['img'].data:
-                feats = feature_model.extract_feat(torch.as_tensor(np.ones((
-                    1, 3, 224, 224))).float())
-                plt.imshow(
-                    np.moveaxis(crop_batch[0].numpy(), 0, -1)[..., [2, 1, 0]])
-                plt.show()
-                print(feats[0].numpy().shape)
-                print(feats[0].numpy()[0])
-                for feat in feats[0].numpy():
+                feats = feature_model.extract_feat(crop_batch.unsqueeze(0))
+
+                for feat in feats.numpy():
                     ds, ids = index.search(np.array([feat]), 5)
-                    print("distances shape :", ds.shape)
-                    print("result ids", ids)
                     chosen_one = sorted(zip(ds, ids), key=lambda x: x[0])[0]
                     print(
                         "chosen id: ",
                         chosen_one,
-                        list(class_labels.keys())[list(class_labels.values()).index(chosen_one[1][0])]
+                        list(class_labels.keys())[
+                            list(class_labels.values()).index(chosen_one[1][0])]
                     )
+
+                    plt.imshow(tensor2imgs(crop_batch.unsqueeze(0),
+                                           **feature_cfg.img_norm_cfg)[0])
+                    plt.show()
         break
 
 

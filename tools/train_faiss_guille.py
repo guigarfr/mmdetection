@@ -228,22 +228,28 @@ def main():
         pickle.dump(class_dict, f)
     # Get train samples
 
-    feature_cfg = Config.fromfile(
-        '/home/cgarriga/sources/mmdetection/configs/resnet_features.py')
-    feature_model = build_detector(
-        feature_cfg.model, test_cfg=feature_cfg.get('test_cfg'))
-    feature_model.eval()
+    feature_cfg = mmcv.Config.fromfile(
+        '/home/cgarriga/sources/mmclassification/configs/resnet/resnet50_b32x8_imagenet.py')
+    from mmcls.apis import init_model as feat_init_model
 
-    feature_cfg.data.test.pipeline = replace_ImageToTensor(
-        feature_cfg.data.test.pipeline)
-    feature_test_pipeline = Compose(feature_cfg.data.test.pipeline)
+    feature_model = feat_init_model(
+        feature_cfg,
+        '/home/cgarriga/sources/mmclassification'
+        '/resnet50_batch256_imagenet_20200708-cfb998bf.pth',
+        'cpu'
+    )
+
+    from mmcls.datasets.pipelines import Compose as feat_compose
+
+    feature_cfg.data.test.pipeline.pop(0)
+    feature_test_pipeline = feat_compose(feature_cfg.data.test.pipeline)
 
     import faiss
 
     quantizer = faiss.IndexFlatL2(2048)
     index = faiss.IndexIVFFlat(quantizer, 2048, 2, faiss.METRIC_L2)
 
-    MAX_SAMPLES = 100
+    MAX_SAMPLES = 1000
     train = []
     for i, samples in enumerate(dataset):
         if i > MAX_SAMPLES:
@@ -263,7 +269,7 @@ def main():
                 feats = feature_model.extract_feat(
                     torch.as_tensor([dats['img'].data.numpy()])
                 )
-                train.append((feats[0].numpy().astype('float32'), label))
+                train.append((feats.numpy().astype('float32'), label))
         print(i)
     feats, labels = zip(*train)
     print(len(feats))
