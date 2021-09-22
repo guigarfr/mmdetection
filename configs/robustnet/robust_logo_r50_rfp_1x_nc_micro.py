@@ -25,6 +25,6 @@ lr_config = dict(
 # Set max epochs to 18
 runner = dict(type='EpochBasedRunner', max_epochs=18)
 
-work_dir = "/home/ubuntu/train_checkpoints/robustnet_no_class"
+work_dir = "/home/ubuntu/train_checkpoints/tmp"
 load_from = "/home/ubuntu/epoch_21.pth"
 data_root = '/home/ubuntu/data/logo_dataset/'

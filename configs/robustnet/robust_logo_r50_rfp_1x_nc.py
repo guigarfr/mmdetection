@@ -4,6 +4,10 @@ _base_ = [
     '../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py'
 ]
 
+data = dict(
+    samples_per_gpu=2,
+)
+
 # optimizer
 optimizer = dict(
     lr=0.0025, paramwise_cfg=dict(bias_lr_mult=2., bias_decay_mult=0.))

@@ -63,7 +63,9 @@ class CustomDataset(Dataset):
                  seg_prefix=None,
                  proposal_file=None,
                  test_mode=False,
-                 filter_empty_gt=True):
+                 filter_empty_gt=True,
+                 collapse_multiclass=False,
+                 ):
         self.ann_file = ann_file
         self.data_root = data_root
         self.img_prefix = img_prefix
@@ -71,6 +73,7 @@ class CustomDataset(Dataset):
         self.proposal_file = proposal_file
         self.test_mode = test_mode
         self.filter_empty_gt = filter_empty_gt
+        self.collapse_multiclass = collapse_multiclass
         self.CLASSES = self.get_classes(classes)
 
         # join paths if data_root is specified
@@ -265,6 +268,17 @@ class CustomDataset(Dataset):
     def format_results(self, results, **kwargs):
         """Place holder to format result to dataset specific output."""
 
+    @staticmethod
+    def collapse_multiclass_results(results):
+        new_results = list()
+        for image in results:
+            new_bbs = np.empty((0, 5))
+            for bbs in image:
+                new_bbs = np.vstack((new_bbs, bbs))
+            new_results.append([new_bbs])
+
+        return new_results
+
     def evaluate(self,
                  results,
                  metric='mAP',
@@ -293,6 +307,10 @@ class CustomDataset(Dataset):
         allowed_metrics = ['mAP', 'recall']
         if metric not in allowed_metrics:
             raise KeyError(f'metric {metric} is not supported')
+
+        if self.collapse_multiclass:
+            results = self.collapse_multiclass_results(results)
+
         annotations = [self.get_ann_info(i) for i in range(len(self))]
         eval_results = OrderedDict()
         iou_thrs = [iou_thr] if isinstance(iou_thr, float) else iou_thr

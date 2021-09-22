@@ -1,4 +1,4 @@
-_base_ = './logos_dataset_detection.py'
+_base_ = './rp_logos_dataset.py'
 
 data = dict(
     train=dict(
