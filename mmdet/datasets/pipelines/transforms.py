@@ -2603,9 +2603,14 @@ class CropBoundingBox:
     def __call__(self, results):
         img = results['img']
         bbox = list(map(int, results['gt_bboxes'][0]))
+        if any((b < 0 for b in bbox)):
+            return None
         if bbox[2] - bbox[0] == 0 or bbox[3] - bbox[1] == 0:
-            return dict()
+            return None
         img = img[bbox[1]:bbox[3], bbox[0]:bbox[2], :]
         results['img'] = img
         results['img_shape'] = img.shape
+
+        # This shouldn't be here, but it's very useful
+        results['gt_label'] = results['gt_labels'][0]
         return results
