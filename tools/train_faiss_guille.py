@@ -284,20 +284,18 @@ def main():
             break
 
         img = samples['img']
-        bboxes = samples['gt_bboxes']
-        labels = samples['gt_labels']
-        for bbox, label in zip(bboxes, labels):
-            dats = dict(
-                img=img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])],
-            )
-            # build the data pipeline
-            dats = feature_test_pipeline(dats)
+        label = samples['gt_label']
+        dats = dict(
+            img=img,
+        )
+        # build the data pipeline
+        dats = feature_test_pipeline(dats)
 
-            with torch.no_grad():
-                feats = feature_model.extract_feat(
-                    torch.as_tensor([dats['img'].data.numpy()])
-                )
-                train.append((feats.numpy().astype('float32'), label))
+        with torch.no_grad():
+            feats = feature_model.extract_feat(
+                torch.as_tensor([dats['img'].data.numpy()])
+            )
+            train.append((feats.numpy().astype('float32'), label))
         print(i)
     feats, labels = zip(*train)
     print(len(feats))
@@ -305,7 +303,7 @@ def main():
     print(feats.shape)
     print(feats[0].shape)
     index.train(feats)
-    index.add_with_ids(feats, np.array(labels))
+    index.add_with_ids(feats, np.array(labels).flatten())
     faiss.write_index(index, f'index_100_{args.feature_extractor}')
 
 
