@@ -14,7 +14,8 @@ from .utils import (NumClassCheckHook, get_loading_pipeline,
                     replace_ImageToTensor)
 from .voc import VOCDataset
 from .wider_face import WIDERFaceDataset
-from .xml_style import (XMLDataset, XMLDatasetClassification)
+from .xml_style import XMLDataset
+from .classification import XMLDatasetClassification
 
 
 __all__ = [
