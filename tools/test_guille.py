@@ -55,12 +55,34 @@ def replace_pipeline(my_cfg, eval=True, samples_per_gpu=None):
 
     return samples_per_gpu
 
+feature_extractors = dict(
+    resnet50=(
+        'mmclassification/configs/resnet/resnet50_b32x8_imagenet.py',
+        'mmclassification/resnet50_batch256_imagenet_20200708-cfb998bf.pth'
+    ),
+    mobilenetv2=(
+        'mmclassification/configs/mobilenet_v2/mobilenet_v2_b32x8_imagenet.py',
+        'mmclassification/mobilenet_v2_batch256_imagenet_20200708-3b2dc3af.pth'
+    )
+)
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description='MMDet test (and eval) a model')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument(
+        '--source-path',
+        help='path to the folder containing helper projects',
+        default='/home/cgarriga/sources',
+    )
+    parser.add_argument(
+        '--feature-extractor',
+        help='Specify the feature extractor to be used',
+        choices=list(feature_extractors.keys()),
+        default='resnet50'
+    )
     parser.add_argument(
         '--work-dir',
         help='the directory to save the file containing evaluation metrics')
@@ -227,16 +249,15 @@ def main():
 
     model.eval()
 
+    config_path, checkpoint_path = feature_extractors[args.feature_extractor]
     feature_cfg = mmcv.Config.fromfile(
-        '/home/cgarriga/sources/mmclassification/configs/resnet'
-        '/resnet50_b32x8_imagenet.py'
+        os.path.join(args.source_path, config_path)
     )
     from mmcls.apis import init_model as feat_init_model
 
     feature_model = feat_init_model(
         feature_cfg,
-        '/home/cgarriga/sources/mmclassification'
-        '/resnet50_batch256_imagenet_20200708-cfb998bf.pth',
+        os.path.join(args.source_path, checkpoint_path),
         'cpu'
     )
 
