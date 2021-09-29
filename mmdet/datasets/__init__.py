@@ -15,7 +15,8 @@ from .utils import (NumClassCheckHook, get_loading_pipeline,
 from .voc import VOCDataset
 from .wider_face import WIDERFaceDataset
 from .xml_style import XMLDataset
-from .classification import XMLDatasetClassification
+from .classification import (XMLDatasetClassification,
+                             OpenBrandDatasetClassification)
 
 
 __all__ = [
@@ -26,5 +27,6 @@ __all__ = [
     'ClassBalancedDataset', 'WIDERFaceDataset', 'DATASETS', 'PIPELINES',
     'build_dataset', 'replace_ImageToTensor', 'get_loading_pipeline',
     'NumClassCheckHook', 'CocoPanopticDataset', 'MultiImageMixDataset',
-    'OpenBrandDataset', 'XMLDatasetClassification'
+    'OpenBrandDataset', 'XMLDatasetClassification',
+    'OpenBrandDatasetClassification'
 ]
