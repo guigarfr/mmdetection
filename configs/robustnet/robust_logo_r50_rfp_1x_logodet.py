@@ -1,6 +1,6 @@
 _base_ = [
     '../_base_/models/robust_logo_r50_rfp.py',
-    '../_base_/datasets/logodet_3k_test.py',
+    '../_base_/datasets/logodet_3k.py',
     '../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py'
 ]
 
