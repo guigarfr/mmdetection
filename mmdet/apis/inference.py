@@ -172,14 +172,17 @@ async def async_inference_detector(model, imgs):
 
     cfg = model.cfg
     device = next(model.parameters()).device  # model device
+    
+    if isinstance(cfg.data.test, list):
+        test_pipeline = cfg.data.test[0].pipeline
+    else:
+        test_pipeline = cfg.data.test.pipeline
 
     if isinstance(imgs[0], np.ndarray):
-        cfg = cfg.copy()
         # set loading pipeline type
-        cfg.data.test.pipeline[0].type = 'LoadImageFromWebcam'
+        test_pipeline[0].type = 'LoadImageFromWebcam'
 
-    cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
-    test_pipeline = Compose(cfg.data.test.pipeline)
+    test_pipeline = pipelines.Compose(replace_ImageToTensor(test_pipeline))
 
     datas = []
     for img in imgs:
