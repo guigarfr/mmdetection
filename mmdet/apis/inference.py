@@ -182,7 +182,7 @@ async def async_inference_detector(model, imgs):
         # set loading pipeline type
         test_pipeline[0].type = 'LoadImageFromWebcam'
 
-    test_pipeline = pipelines.Compose(replace_ImageToTensor(test_pipeline))
+    test_pipeline = Compose(replace_ImageToTensor(test_pipeline))
 
     datas = []
     for img in imgs:
