@@ -140,12 +140,13 @@ def inference_detector(model, imgs):
     if next(model.parameters()).is_cuda:
         # scatter to specified GPU
         data = scatter(data, [device])[0]
+    """
     else:
         for m in model.modules():
             assert not isinstance(
                 m, RoIPool
             ), 'CPU inference with RoIPool is not supported currently.'
-
+    """
     # forward the model
     with torch.no_grad():
         results = model(return_loss=False, rescale=True, **data)
