@@ -4,7 +4,7 @@ import warnings
 import mmcv
 import numpy as np
 import torch
-from mmcv.ops import RoIPool
+# from mmcv.ops import RoIPool
 from mmcv.parallel import collate, scatter
 from mmcv.runner import load_checkpoint
 
@@ -108,14 +108,17 @@ def inference_detector(model, imgs):
 
     cfg = model.cfg
     device = next(model.parameters()).device  # model device
+    
+    if isinstance(cfg.data.test, list):
+        test_pipeline = cfg.data.test[0].pipeline
+    else:
+        test_pipeline = cfg.data.test.pipeline
 
     if isinstance(imgs[0], np.ndarray):
-        cfg = cfg.copy()
         # set loading pipeline type
-        cfg.data.test.pipeline[0].type = 'LoadImageFromWebcam'
+        test_pipeline[0].type = 'LoadImageFromWebcam'
 
-    cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
-    test_pipeline = Compose(cfg.data.test.pipeline)
+    test_pipeline = Compose(replace_ImageToTensor(test_pipeline))
 
     datas = []
     for img in imgs:
@@ -137,12 +140,13 @@ def inference_detector(model, imgs):
     if next(model.parameters()).is_cuda:
         # scatter to specified GPU
         data = scatter(data, [device])[0]
+    """
     else:
         for m in model.modules():
             assert not isinstance(
                 m, RoIPool
             ), 'CPU inference with RoIPool is not supported currently.'
-
+    """
     # forward the model
     with torch.no_grad():
         results = model(return_loss=False, rescale=True, **data)
@@ -168,14 +172,17 @@ async def async_inference_detector(model, imgs):
 
     cfg = model.cfg
     device = next(model.parameters()).device  # model device
+    
+    if isinstance(cfg.data.test, list):
+        test_pipeline = cfg.data.test[0].pipeline
+    else:
+        test_pipeline = cfg.data.test.pipeline
 
     if isinstance(imgs[0], np.ndarray):
-        cfg = cfg.copy()
         # set loading pipeline type
-        cfg.data.test.pipeline[0].type = 'LoadImageFromWebcam'
+        test_pipeline[0].type = 'LoadImageFromWebcam'
 
-    cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
-    test_pipeline = Compose(cfg.data.test.pipeline)
+    test_pipeline = Compose(replace_ImageToTensor(test_pipeline))
 
     datas = []
     for img in imgs:
@@ -197,12 +204,13 @@ async def async_inference_detector(model, imgs):
     if next(model.parameters()).is_cuda:
         # scatter to specified GPU
         data = scatter(data, [device])[0]
+    '''
     else:
         for m in model.modules():
             assert not isinstance(
                 m, RoIPool
             ), 'CPU inference with RoIPool is not supported currently.'
-
+    '''
     # We don't restore `torch.is_grad_enabled()` value during concurrent
     # inference since execution can overlap
     torch.set_grad_enabled(False)

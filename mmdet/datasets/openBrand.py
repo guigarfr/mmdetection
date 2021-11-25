@@ -18,14 +18,8 @@ from .custom import CustomDataset
 @DATASETS.register_module()
 class OpenBrandDataset(CustomDataset):
 
-    default_class_name = 'Object'
-
-    def __init__(self, *args, force_one_class=False, **kwargs):
-        self.force_one_class = force_one_class
-        if self.force_one_class:
-            kwargs["classes"] = [self.default_class_name]
-        else:
-            kwargs.setdefault("classes", "sample_test/labelList.txt")
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("classes", "sample_test/labelList.txt")
         super().__init__(*args, **kwargs)
 
     def load_annotations(self, ann_file):
@@ -39,28 +33,45 @@ class OpenBrandDataset(CustomDataset):
         """
 
         self.coco = COCO(ann_file)
-        if self.force_one_class:
-            self.cat_ids = [0]
-        else:
-            self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
+        self.cat_ids = self.coco.get_cat_ids(cat_names=self.CLASSES)
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
         self.img_ids = self.coco.get_img_ids()
         data_infos = []
         for i in self.img_ids:
             info = self.coco.load_imgs([i])[0]
             info['filename'] = info['file_name']
-
-            ann_ids = self.coco.get_ann_ids(img_ids=[i])
-            ann_info = self.coco.load_anns(ann_ids)
-            info['ann'] = self._parse_ann_info(info, ann_info)
-            info['ann']['labels'] = np.array([
-                int(ann['category_id']) if not self.force_one_class else 0
-                for ann in ann_info
-            ])
-
             data_infos.append(info)
-
         return data_infos
+
+    def get_ann_info(self, idx):
+        """Get COCO annotation by index.
+
+        Args:
+            idx (int): Index of data.
+
+        Returns:
+            dict: Annotation info of specified index.
+        """
+
+        img_id = self.data_infos[idx]['id']
+        ann_ids = self.coco.get_ann_ids(img_ids=[img_id])
+        ann_info = self.coco.load_anns(ann_ids)
+        return self._parse_ann_info(self.data_infos[idx], ann_info)
+
+    def get_cat_ids(self, idx):
+        """Get COCO category ids by index.
+
+        Args:
+            idx (int): Index of data.
+
+        Returns:
+            list[int]: All categories in the image of specified index.
+        """
+
+        img_id = self.data_infos[idx]['id']
+        ann_ids = self.coco.get_ann_ids(img_ids=[img_id])
+        ann_info = self.coco.load_anns(ann_ids)
+        return [ann['category_id'] for ann in ann_info]
 
     def _filter_imgs(self, min_size=32):
         """Filter images too small or without ground truths."""
@@ -124,16 +135,14 @@ class OpenBrandDataset(CustomDataset):
                 continue
             if ann['area'] <= 0 or w < 1 or h < 1:
                 continue
-            if (not self.force_one_class) and ann[
-                    'category_id'] not in self.cat_ids:
+            if ann['category_id'] not in self.cat_ids:
                 continue
             bbox = [x1, y1, x1 + w, y1 + h]
             if ann.get('iscrowd', False):
                 gt_bboxes_ignore.append(bbox)
             else:
                 gt_bboxes.append(bbox)
-                cat_id = 0 if self.force_one_class else ann['category_id']
-                gt_labels.append(self.cat2label[cat_id])
+                gt_labels.append(self.cat2label[ann['category_id']])
                 gt_masks_ann.append(ann['segmentation'])
 
         if gt_bboxes:

@@ -1,33 +1,25 @@
 _base_ = [
-    '../_base_/schedules/schedule_1x.py',
-    '../_base_/default_runtime.py'
+    '_base_/schedules/schedule_1x.py',
+    '_base_/default_runtime.py'
 ]
-
-fp16 = dict(loss_scale=512.)
 
 # model settings
 model = dict(
-    type='FCOS',
+    type='SingleStageDetector',
     backbone=dict(
         type='ResNet',
         depth=50,
         num_stages=4,
-        out_indices=(0, 1, 2, 3),
+        out_indices=(3,),
         frozen_stages=4,
         norm_cfg=dict(type='BN', requires_grad=False),
         norm_eval=True,
         style='caffe',
         init_cfg=dict(
             type='Pretrained',
-            checkpoint='open-mmlab://detectron/resnet50_caffe')),
-    neck=dict(
-        type='FPN',
-        in_channels=[256, 512, 1024, 2048],
-        out_channels=256,
-        start_level=1,
-        add_extra_convs='on_output',  # use P5
-        num_outs=5,
-        relu_before_extra_convs=True),
+            checkpoint='open-mmlab://detectron/resnet50_caffe')
+    ),
+    neck=dict(type='GlobalAveragePooling'),
     bbox_head=dict(
         type='FCOSHead',
         num_classes=1,
@@ -61,6 +53,25 @@ model = dict(
         score_thr=0.05,
         nms=dict(type='nms', iou_threshold=0.5),
         max_per_img=100))
+
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+
+test_pipeline = [
+    dict(type='Resize',  img_scale=(224, 224)),
+    dict(type='Normalize', **img_norm_cfg),
+    dict(type='ImageToTensor', keys=['img']),
+    dict(type='Collect', keys=['img'], meta_keys=[])
+]
+data = dict(
+    samples_per_gpu=1,
+    workers_per_gpu=1,
+    test=dict(
+        # replace `data/val` with `data/test` for standard test
+        type='Imagenet',
+        data_prefix='data/imagenet/val',
+        ann_file='data/imagenet/meta/val.txt',
+        pipeline=test_pipeline))
 
 # optimizer
 optimizer = dict(
